@@ -1,0 +1,860 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>友善時間 - 精準折扣查詢</title>
+    <!-- 引入 React, ReactDOM, Babel CDN -->
+    <script
+      src="https://unpkg.com/react@18/umd/react.production.min.js"
+      crossorigin
+    ></script>
+    <script
+      src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"
+      crossorigin
+    ></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+      /* 基礎 CSS 樣式 */
+      body {
+        font-family: "Inter", "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        display: flex;
+        flex-direction: column; /* 讓內容垂直堆疊 */
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        margin: 0;
+        background-color: #f0f2f5;
+        color: #333;
+        padding: 20px; /* 增加整體內邊距 */
+        box-sizing: border-box; /* 確保 padding 不會增加總寬度 */
+        position: relative; /* 為絕對定位的切換按鈕提供參考點 */
+      }
+
+      /* 主卡片容器 - 預設為無卡片效果 */
+      .app-card-container {
+        position: relative; /* 為絕對定位的時間顯示提供參考點 */
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        max-width: 450px; /* 模擬手機APP介面寬度，略微放寬 */
+        padding: 20px;
+        padding-top: 50px; /* 增加頂部內邊距，為時間顯示留出空間 */
+        box-sizing: border-box;
+        /* 初始狀態無背景、無圓角、無陰影 */
+        background-color: transparent;
+        border-radius: 0;
+        box-shadow: none;
+        margin-bottom: 25px; /* 與下方狀態顯示區塊的間距 */
+        overflow: hidden; /* 確保背景不溢出圓角 */
+        z-index: 1; /* 確保整個卡片在body的背景之上 */
+        min-height: 250px; /* 確保卡片在沒有LOGO顯示時也有足夠高度 */
+        transition: all 0.3s ease-in-out; /* 平滑過渡效果 */
+      }
+
+      /* 主卡片容器 - 選擇店家後的卡片效果 */
+      .app-card-container.selected-state {
+        background-color: #ffffff; /* 增加背景色 */
+        border-radius: 20px; /* 圓角 */
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15); /* 更明顯的陰影 */
+        background-size: contain; /* 背景圖片覆蓋整個容器 */
+        background-position: center center; /* 背景圖片居中 */
+        background-repeat: no-repeat; /* 背景圖片不重複 */
+      }
+
+      /* 右上角時間顯示 */
+      .current-time-display {
+        position: absolute;
+        top: 15px; /* 距離頂部 */
+        right: 20px; /* 距離右側 */
+        font-size: 1.1em;
+        font-weight: bold;
+        color: #007bff; /* 藍色 */
+        background-color: #e9ecef;
+        padding: 5px 10px;
+        border-radius: 8px;
+        z-index: 10; /* 確保在最上層 */
+      }
+
+      /* 初始狀態：兩個大 LOGO 容器 (手機版為 column，桌面版為 grid) */
+      .logo-container {
+        width: 100%;
+        display: flex; /* 預設為 flex，手機上為 column */
+        flex-direction: column;
+        gap: 25px; /* 增加間距 */
+        margin-bottom: 35px; /* 增加下方間距 */
+        position: relative; /* 確保內容在背景之上 */
+        z-index: 2;
+      }
+      .logo-wrapper {
+        background-color: rgba(255, 255, 255, 0.9); /* 輕微透明背景色 */
+        border-radius: 18px; /* 圓角 */
+        box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08); /* 輕微陰影 */
+        overflow: hidden;
+        cursor: pointer;
+        transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+        padding: 25px; /* 增加內邊距 */
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 120px; /* 確保高度一致 */
+      }
+      .logo-wrapper:hover {
+        transform: translateY(-7px); /* 懸停效果更明顯 */
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12); /* 懸停陰影 */
+      }
+      .logo-wrapper img {
+        width: 100%; /* LOGO 尺寸放大 */
+        height: 100%; /* 填滿容器高度 */
+        max-width: 250px; /* 限制最大寬度 */
+        object-fit: contain; /* 保持長寬比 */
+        display: block;
+      }
+
+      /* 狀態顯示文字的外部容器 (位於主卡片下方) */
+      .status-display-outer-container {
+        width: 100%;
+        max-width: 450px; /* 與主卡片寬度一致 */
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        padding: 0px 20px; /* 移除背景和陰影後，調整內邊距 */
+        box-sizing: border-box;
+        margin-bottom: 25px; /* 與下方切換按鈕的間距 */
+        min-height: 100px; /* 確保有足夠高度 */
+      }
+
+      /* 選取後狀態：單一小 LOGO 外部容器 (位於狀態顯示區塊下方) */
+      .switch-logo-container-outer {
+        width: 100%;
+        max-width: 450px; /* 與主卡片寬度一致 */
+        display: flex;
+        justify-content: center; /* 置中顯示 */
+        align-items: center;
+        padding: 15px 20px; /* 增加內邊距 */
+        box-sizing: border-box;
+        border-radius: 15px; /* 圓角 */
+        /* 桌面版絕對定位 */
+        position: static; /* 預設為 static (手機版) */
+        bottom: auto;
+        right: auto;
+        z-index: auto;
+      }
+      .switch-logo-wrapper {
+        background-color: #ffffff; /* 更改為白色背景 */
+        border-radius: 12px; /* 較小的圓角 */
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05); /* 較輕的陰影 */
+        overflow: hidden;
+        cursor: pointer;
+        transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+        padding: 10px 15px; /* 調整內邊距，為垂直佈局留出空間 */
+        display: flex;
+        flex-direction: column; /* 垂直堆疊圖片和文字 */
+        justify-content: center;
+        align-items: center;
+        width: fit-content; /* 內容自適應寬度 */
+        max-width: 220px; /* 調整最大寬度以容納橫向 LOGO 和文字 */
+        gap: 5px; /* 稍微減少 LOGO 與文字的間距 */
+      }
+      .switch-logo-wrapper:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      }
+      .switch-logo-wrapper img {
+        width: 100%; /* 讓圖片寬度填滿容器 */
+        height: auto; /* 高度自適應以保持比例 */
+        max-height: 35px; /* 限制圖片最大高度 */
+        display: block;
+        object-fit: contain; /* 保持長寬比 */
+      }
+      .switch-logo-text {
+        font-size: 1em; /* 稍微調整字體大小 */
+        color: #555;
+        white-space: nowrap; /* 避免文字換行 */
+        flex-shrink: 0; /* 確保文字不被壓縮 */
+        text-align: center; /* 確保文字居中 */
+      }
+
+      /* 狀態顯示文字 */
+      .status-main-text {
+        font-size: 2.4em; /* 狀態文字放大 */
+        font-weight: bold;
+        color: #dc3545; /* 友善時光主文字為紅色 (恢復為淺色背景下的顏色) */
+        text-align: center;
+        min-height: 1.5em; /* 避免內容變動時高度跳動 */
+        transition: color 0.3s ease-in-out;
+        margin-bottom: 10px; /* 與折扣文字的間距 */
+        text-shadow: none; /* 移除文字陰影 */
+      }
+      .status-discount-text {
+        font-size: 1.8em; /* 折扣文字大小 */
+        font-weight: bold;
+        color: #28a745; /* 折扣文字為綠色 (恢復為淺色背景下的顏色) */
+        text-align: center;
+        min-height: 1.2em; /* 避免內容變動時高度跳動 */
+        text-shadow: none; /* 移除文字陰影 */
+      }
+      .status-placeholder {
+        font-size: 1.8em;
+        color: #6c757d; /* 灰色提示文字 (恢復為淺色背景下的顏色) */
+        text-align: center;
+        min-height: 1.5em;
+        text-shadow: none; /* 移除文字陰影 */
+      }
+
+      /* 響應式設計 */
+      @media (max-width: 600px) {
+        body {
+          padding: 15px;
+        }
+        .app-card-container {
+          padding: 15px;
+          padding-top: 40px; /* 手機上調整頂部內邊距 */
+          border-radius: 15px;
+          box-shadow: none; /* 手機上移除陰影，更簡潔 */
+          background-color: transparent; /* 手機上移除背景色 */
+          margin-bottom: 15px; /* 手機上調整與下方狀態顯示區塊的間距 */
+          min-height: 200px; /* 手機上調整卡片最小高度 */
+        }
+        .current-time-display {
+          top: 10px;
+          right: 10px;
+          font-size: 0.9em;
+          padding: 4px 8px;
+          border-radius: 6px;
+        }
+        .logo-container {
+          gap: 15px;
+          margin-bottom: 25px;
+        }
+        .logo-wrapper {
+          padding: 20px;
+          border-radius: 12px;
+        }
+        .status-main-text {
+          font-size: 1.8em;
+        }
+        .status-discount-text {
+          font-size: 1.4em;
+        }
+        .status-placeholder {
+          font-size: 1.4em;
+        }
+        /* 手機上狀態顯示區塊調整 */
+        .status-display-outer-container {
+          padding: 10px 15px;
+          margin-bottom: 15px;
+          min-height: 80px;
+        }
+        /* 手機上切換 LOGO 樣式調整 */
+        .switch-logo-container-outer {
+          padding: 10px 15px; /* 手機上調整內邊距 */
+          position: static; /* 確保手機上是正常流動 */
+        }
+        .switch-logo-wrapper {
+          padding: 6px 12px; /* 手機上更小的內邊距 */
+          border-radius: 10px;
+          max-width: 180px; /* 手機上調整最大寬度 */
+        }
+        .switch-logo-wrapper img {
+          max-height: 28px; /* 手機上調整圖片最大高度 */
+        }
+        .switch-logo-text {
+          font-size: 0.9em;
+        }
+      }
+
+      /* 桌面版面 (> 600px) 專用樣式 */
+      @media (min-width: 601px) {
+        .logo-container {
+          display: grid;
+          grid-template-columns: repeat(2, 1fr); /* 2 欄網格 */
+          gap: 30px; /* 網格間距 */
+          margin-bottom: 50px; /* 增加下方間距 */
+        }
+        .logo-wrapper {
+          padding: 30px; /* 桌面版 LOGO 內邊距 */
+        }
+        .switch-logo-container-outer {
+          position: absolute; /* 桌面版絕對定位 */
+          bottom: 20px;
+          right: 20px;
+          width: auto; /* 寬度自適應內容 */
+          max-width: 300px; /* 限制最大寬度 */
+          padding: 0; /* 移除外部 padding */
+          box-shadow: none; /* 移除外部陰影 */
+          border-radius: 0; /* 移除外部圓角 */
+        }
+        .switch-logo-wrapper {
+          padding: 12px 20px; /* 桌面版按鈕內邊距 */
+          max-width: none; /* 取消最大寬度限制，讓內容決定 */
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+      // 定義友善時光區間與折扣資訊
+      const FRIENDLY_TIME_CONFIG = {
+        sevenEleven: {
+          id: "sevenEleven",
+          name: "7-ELEVEN",
+          // 更新為你提供的一般 LOGO 網址
+          logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/4/40/7-eleven_logo.svg/800px-7-eleven_logo.svg.png",
+          // 新增橫向 LOGO 網址
+          horizontalLogo:
+            "https://www.us3c.com.tw/wp-content/uploads/2022/04/7-ELEVEn_%E6%A9%AB%E5%BC%8Flogo-%E8%BD%89%E6%8F%9Brgb_10909-04.png",
+          friendlyHours: [
+            // 10:00 - 17:00 65折 (鮮食麵類與米飯)
+            {
+              start: { hour: 10, minute: 0 },
+              end: { hour: 17, minute: 0 },
+              discount: "65折",
+              description: "鮮食麵類與米飯",
+            },
+            // 19:00 - 19:59 8折 (鮮食麵包含三角/圓形飯糰)
+            {
+              start: { hour: 19, minute: 0 },
+              end: { hour: 19, minute: 59 },
+              discount: "8折",
+              description: "鮮食麵包含三角/圓形飯糰",
+            },
+            // 20:00 - 03:00 65折 (鮮食麵包含三角/圓形飯糰) - 跨日
+            {
+              start: { hour: 20, minute: 0 },
+              end: { hour: 3, minute: 0 },
+              discount: "65折",
+              description: "鮮食麵包含三角/圓形飯糰",
+            },
+          ],
+        },
+        familyMart: {
+          id: "familyMart",
+          name: "全家",
+          // 更新為你提供的一般 LOGO 網址
+          logo: "https://play-lh.googleusercontent.com/e3AKbefh3znufeBBSF1anaUZwV7oSkTjNCn67ZdSD18DwE95y7lZY9uHDloXH8fcmg",
+          // 新增橫向 LOGO 網址
+          horizontalLogo:
+            "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ-h1Z5--PFgKXN_kIDwmMLDPb0UPYkA5wqkQ&s",
+          friendlyHours: [
+            // 10:00 - 17:00 7折 (飯糰、壽司、手卷、便當類等)
+            {
+              start: { hour: 10, minute: 0 },
+              end: { hour: 17, minute: 0 },
+              discount: "7折",
+              description: "飯糰、壽司、手卷、便當類等",
+            },
+            // 17:00 - 00:00 7折 (即期鮮食：便當、三明治、沙拉、湯品等)
+            {
+              start: { hour: 17, minute: 0 },
+              end: { hour: 24, minute: 0 },
+              discount: "7折",
+              description: "即期鮮食（便當、三明治、沙拉、湯品等）",
+            }, // 24:00 代表當天結束，即 23:59:59
+          ],
+        },
+      };
+
+      /**
+       * 判斷當前時間是否在友善時光區間內，並返回折扣資訊。
+       * @param {Date} currentTime 當前時間物件。
+       * @param {Object} storeConfig 店家配置，包含 friendlyHours 陣列。
+       * @returns {{isFriendly: boolean, discount: string|null, description: string|null}} 判斷結果。
+       */
+      const isFriendlyTime = (currentTime, storeConfig) => {
+        const currentHour = currentTime.getHours();
+        const currentMinute = currentTime.getMinutes();
+        const currentTotalMinutes = currentHour * 60 + currentMinute;
+
+        for (const range of storeConfig.friendlyHours) {
+          const startTotalMinutes =
+            range.start.hour * 60 + (range.start.minute || 0);
+          let endTotalMinutes = range.end.hour * 60 + (range.end.minute || 0);
+
+          // 判斷時間區間是否跨日 (例如 20:00 - 03:00)
+          const crossesMidnight =
+            range.start.hour > range.end.hour ||
+            (range.start.hour === range.end.hour &&
+              range.start.minute > range.end.minute);
+
+          let inRange = false;
+
+          if (!crossesMidnight) {
+            // 標準時間區間 (例如 10:00 - 17:00 或 19:00 - 19:59)
+            // 如果結束分鐘是 59，表示包含該分鐘 (例如 19:59:59)
+            if (range.end.minute === 59) {
+              inRange =
+                currentTotalMinutes >= startTotalMinutes &&
+                currentTotalMinutes <= endTotalMinutes;
+            } else {
+              // 否則，結束時間點不包含 (例如 17:00 指 16:59:59 之前)
+              inRange =
+                currentTotalMinutes >= startTotalMinutes &&
+                currentTotalMinutes < endTotalMinutes;
+            }
+          } else {
+            // 跨日時間區間 (例如 20:00 - 03:00)
+            // 判斷邏輯：在第一天的區間內 OR 在第二天的區間內
+            const isAfterStartOnFirstDay =
+              currentTotalMinutes >= startTotalMinutes &&
+              currentTotalMinutes < 24 * 60; // Up to 23:59
+            let isBeforeEndOnNextDay = currentTotalMinutes >= 0; // From 00:00
+
+            // 如果跨日區間的結束分鐘是 59，則第二天的區間需要包含該分鐘
+            if (range.end.minute === 59) {
+              isBeforeEndOnNextDay =
+                isBeforeEndOnNextDay && currentTotalMinutes <= endTotalMinutes;
+            } else {
+              isBeforeEndOnNextDay =
+                isBeforeEndOnNextDay && currentTotalMinutes < endTotalMinutes;
+            }
+
+            inRange = isAfterStartOnFirstDay || isBeforeEndOnNextDay;
+          }
+
+          if (inRange) {
+            return {
+              isFriendly: true,
+              discount: range.discount,
+              description: range.description,
+            };
+          }
+        }
+        return { isFriendly: false, discount: null, description: null };
+      };
+
+      // 主要的應用組件
+      function App() {
+        // 使用 useState 來管理當前時間和選擇的店家
+        const [currentTime, setCurrentTime] = React.useState(new Date());
+        const [selectedStoreId, setSelectedStoreId] = React.useState(null); // 'sevenEleven' or 'familyMart'
+
+        // 使用 useEffect 來設定定時器，並在組件卸載時清除
+        React.useEffect(() => {
+          const intervalId = setInterval(() => {
+            setCurrentTime(new Date()); // 每 1000 毫秒 (1 秒) 更新一次時間
+          }, 1000); // 更改為 1000ms 讓秒數跳動
+
+          // 清除定時器，避免記憶體洩漏
+          return () => clearInterval(intervalId);
+        }, []); // 空依賴陣列表示只在組件 mount 和 unmount 時執行
+
+        // 處理店家 LOGO 點擊事件
+        const handleLogoClick = (storeId) => {
+          setSelectedStoreId(storeId);
+        };
+
+        // 格式化時間為 HH:MM:SS 格式 (24小時制)
+
+        // 友善時光倒數提示 function
+        function getFriendlyTimeNotice() {
+          if (!selectedStoreId) return null;
+          const storeConfig = FRIENDLY_TIME_CONFIG[selectedStoreId];
+          const now = currentTime;
+          const nowMinutes = now.getHours() * 60 + now.getMinutes();
+          // 取得所有時段，並標註開始/結束分鐘、折扣
+          const periods = storeConfig.friendlyHours.map((r) => {
+            const start = r.start.hour * 60 + (r.start.minute || 0);
+            let end = r.end.hour * 60 + (r.end.minute || 0);
+            // 跨日處理
+            if (end <= start) end += 1440;
+            return { start, end, discount: r.discount };
+          });
+          // 依照現在時間排序所有時段（跨日也能正確排序）
+          const sorted = periods
+            .map((p) => ({
+              ...p,
+              start: p.start,
+              end: p.end,
+            }))
+            .sort((a, b) => a.start - b.start);
+          // 找出目前在哪個時段
+          let inPeriod = null;
+          for (const p of sorted) {
+            let s = p.start,
+              e = p.end;
+            if (nowMinutes < s) (s -= 1440), (e -= 1440); // 跨日修正
+            if (nowMinutes >= s && nowMinutes < e) {
+              inPeriod = p;
+              break;
+            }
+          }
+          // 找出下一個時段
+          let nextPeriod = null;
+          let minDelta = Infinity;
+          for (const p of sorted) {
+            let s = p.start;
+            if (s <= nowMinutes) s += 1440; // 跨日
+            const delta = s - nowMinutes;
+            if (delta > 0 && delta < minDelta) {
+              minDelta = delta;
+              nextPeriod = p;
+            }
+          }
+          // 找出本時段結束後的下一個時段（折扣變化）
+          let nextChange = null;
+          if (inPeriod) {
+            let minChange = Infinity;
+            for (const p of sorted) {
+              let s = p.start;
+              if (s <= nowMinutes) s += 1440;
+              const delta = s - nowMinutes;
+              if (delta > 0 && delta < minChange) {
+                minChange = delta;
+                nextChange = p;
+              }
+            }
+          }
+          // 格式化分鐘為「X小時Y分」
+          function formatDelta(mins) {
+            if (mins < 1) return "不到1分鐘";
+            const h = Math.floor(mins / 60);
+            const m = mins % 60;
+            return (h ? h + "小時" : "") + (m ? m + "分" : !h ? "0分" : "");
+          }
+          // 非友善時光，顯示距離下次開始
+          if (!inPeriod && nextPeriod) {
+            return `距離下次友善時光（${nextPeriod.discount}）還有${formatDelta(
+              minDelta
+            )}`;
+          }
+          // 友善時光中，顯示距離結束與折扣變化
+          if (inPeriod) {
+            const timeToEnd = inPeriod.end - nowMinutes;
+            let msg = `本時段剩餘${formatDelta(timeToEnd)}`;
+            // 折扣變化
+            if (nextChange && nextChange.discount !== inPeriod.discount) {
+              msg += `，再${formatDelta(nextChange.start - nowMinutes)}變成${
+                nextChange.discount
+              }`;
+            }
+            return msg;
+          }
+          return null;
+        }
+        const formattedTime = React.useMemo(() => {
+          const hours = String(currentTime.getHours()).padStart(2, "0");
+          const minutes = String(currentTime.getMinutes()).padStart(2, "0");
+          const seconds = String(currentTime.getSeconds()).padStart(2, "0"); // 新增秒數
+          return `${hours}:${minutes}:${seconds}`;
+        }, [currentTime]); // 當 currentTime 改變時重新計算
+
+        // 根據選擇的店家判斷是否為友善時光，並準備顯示內容
+        const renderStatusContent = React.useMemo(() => {
+          if (!selectedStoreId) {
+            return (
+              <p className="status-placeholder">請點擊上方 LOGO 查詢友善時光</p>
+            );
+          }
+
+          const storeConfig = FRIENDLY_TIME_CONFIG[selectedStoreId];
+          if (!storeConfig) {
+            return <p className="status-placeholder">查詢錯誤，請重試</p>;
+          }
+
+          const result = isFriendlyTime(currentTime, storeConfig);
+
+          return (
+            <div style={{ width: "100%", textAlign: "center" }}>
+              <h1 className="status-main-text">
+                {storeConfig.name}{" "}
+                {result.isFriendly ? "現在是友善時光" : "現在不是友善時光"}
+              </h1>
+              {result.isFriendly && result.discount && (
+                <p className="status-discount-text">{result.discount}</p>
+              )}
+            </div>
+          );
+        }, [selectedStoreId, currentTime]); // 當 selectedStoreId 或 currentTime 改變時重新計算
+
+        // 多商品輸入清單（只保留價錢）
+        const [items, setItems] = React.useState([{ price: "" }]);
+        // 取得目前折扣倍率（如 65折=0.65，7折=0.7，8折=0.8），若非友善時光則為1
+        const currentDiscountRate = React.useMemo(() => {
+          if (!selectedStoreId) return 1;
+          const storeConfig = FRIENDLY_TIME_CONFIG[selectedStoreId];
+          const result = isFriendlyTime(currentTime, storeConfig);
+          if (!result.isFriendly || !result.discount) return 1;
+          // 解析折扣字串（如65折、7折、8折）
+          const match = result.discount.match(/(\d+)(?:\.(\d+))?折/);
+          if (match) {
+            const num = parseFloat(match[1] + (match[2] ? "." + match[2] : ""));
+            // 1~10折都視為0.1~1.0，其餘視為百分比
+            if (num <= 10) {
+              return num / 10;
+            } else {
+              return num / 100;
+            }
+          }
+          return 1;
+        }, [selectedStoreId, currentTime]);
+
+        // 每個商品的折扣後金額（非友善時光時顯示原價）
+        const discountedItems = React.useMemo(
+          () =>
+            items.map((item) => {
+              const p = parseFloat(item.price);
+              if (isNaN(p) || p <= 0) return "";
+              return (
+                p * (currentDiscountRate !== 1 ? currentDiscountRate : 1)
+              ).toFixed(0);
+            }),
+          [items, currentDiscountRate]
+        );
+
+        // 總價（非友善時光時為原價總和）
+        const totalDiscounted = React.useMemo(() => {
+          return discountedItems.reduce(
+            (sum, val) => sum + (parseInt(val) || 0),
+            0
+          );
+        }, [discountedItems]);
+
+        // 根據選中的店家獲取背景 LOGO 圖片
+        const cardBackgroundLogo = selectedStoreId
+          ? `url(${FRIENDLY_TIME_CONFIG[selectedStoreId].logo})`
+          : "none";
+
+        // 根據 selectedStoreId 決定 app-card-container 的 class
+        const appCardClasses = `app-card-container ${
+          selectedStoreId !== null ? "selected-state" : ""
+        }`;
+
+        return (
+          <>
+            {/* 主卡片容器 */}
+            <div
+              className={appCardClasses}
+              style={{ backgroundImage: cardBackgroundLogo }}
+            >
+              {/* 右上角時間顯示 */}
+              <div className="current-time-display">{formattedTime}</div>
+
+              {selectedStoreId === null && (
+                // 初始狀態：顯示兩個大 LOGO
+                <div className="logo-container">
+                  {/* 小七 LOGO */}
+                  <div
+                    className="logo-wrapper"
+                    onClick={() =>
+                      handleLogoClick(FRIENDLY_TIME_CONFIG.sevenEleven.id)
+                    }
+                  >
+                    <img
+                      src={FRIENDLY_TIME_CONFIG.sevenEleven.logo}
+                      alt="7-ELEVEN Logo"
+                      onerror="this.onerror=null; this.src='https://placehold.co/250x100/CCCCCC/333333?text=7-ELEVEN';"
+                    />
+                  </div>
+
+                  {/* 全家 LOGO */}
+                  <div
+                    className="logo-wrapper"
+                    onClick={() =>
+                      handleLogoClick(FRIENDLY_TIME_CONFIG.familyMart.id)
+                    }
+                  >
+                    <img
+                      src={FRIENDLY_TIME_CONFIG.familyMart.logo}
+                      alt="FamilyMart Logo"
+                      onerror="this.onerror=null; this.src='https://placehold.co/250x100/CCCCCC/333333?text=FamilyMart';"
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* 友善時光狀態與折扣顯示 - 位於主卡片下方，且只有在選取店家後才顯示 */}
+            {selectedStoreId !== null && (
+              <div className="status-display-outer-container">
+                {renderStatusContent}{" "}
+                {/* 使用 renderStatusContent 而不是 renderStatusDisplay */}
+                {/* 友善時光倒數提示 */}
+                <div
+                  style={{
+                    marginTop: 8,
+                    color: "#007bff",
+                    fontSize: "1em",
+                    fontWeight: 500,
+                  }}
+                >
+                  {getFriendlyTimeNotice()}
+                </div>
+                {/* 多商品清單輸入區塊 */}
+                <div style={{ marginTop: 20, width: "100%" }}>
+                  <div
+                    style={{
+                      display: "flex",
+                      fontWeight: "bold",
+                      marginBottom: 6,
+                    }}
+                  >
+                    <div style={{ flex: 1 }}>原價</div>
+                    <div style={{ flex: 1 }}></div>
+                    <div style={{ width: 32 }}></div>
+                  </div>
+                  {items.map((item, idx) => (
+                    <div
+                      key={idx}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        marginBottom: 6,
+                      }}
+                    >
+                      <input
+                        type="text"
+                        inputMode="decimal"
+                        pattern="[0-9]*"
+                        value={item.price}
+                        onChange={(e) => {
+                          const newItems = [...items];
+                          newItems[idx].price = e.target.value.replace(
+                            /[^\d.]/g,
+                            ""
+                          );
+                          setItems(newItems);
+                        }}
+                        placeholder="原價"
+                        style={{
+                          flex: 1,
+                          marginRight: 6,
+                          padding: "6px 8px",
+                          fontSize: "1em",
+                          borderRadius: 6,
+                          border: "1px solid #ccc",
+                        }}
+                      />
+                      <div
+                        style={{
+                          flex: 1,
+                          color: currentDiscountRate !== 1 ? "#28a745" : "#888",
+                          fontWeight: "bold",
+                        }}
+                      >
+                        {item.price
+                          ? currentDiscountRate !== 1
+                            ? discountedItems[idx] + " 元"
+                            : "無折扣"
+                          : ""}
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setItems(items.filter((_, i) => i !== idx))
+                        }
+                        style={{
+                          marginLeft: 4,
+                          background: "#eee",
+                          border: "none",
+                          borderRadius: 4,
+                          cursor: "pointer",
+                          fontSize: "1.1em",
+                          padding: "2px 8px",
+                        }}
+                        disabled={items.length === 1}
+                        title="刪除此商品"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ))}
+                  <button
+                    type="button"
+                    onClick={() => setItems([...items, { price: "" }])}
+                    style={{
+                      marginTop: 8,
+                      padding: "6px 16px",
+                      fontSize: "1em",
+                      borderRadius: 6,
+                      border: "1px solid #007bff",
+                      background: "#fff",
+                      color: "#007bff",
+                      cursor: items[items.length - 1].price
+                        ? "pointer"
+                        : "not-allowed",
+                      opacity: items[items.length - 1].price ? 1 : 0.5,
+                    }}
+                    disabled={!items[items.length - 1].price}
+                  >
+                    新增商品
+                  </button>
+                  {/* 總計顯示 */}
+                  <div
+                    style={{
+                      marginTop: 16,
+                      fontSize: "1.2em",
+                      fontWeight: "bold",
+                      color: "#28a745",
+                    }}
+                  >
+                    {items.some((i) => i.price)
+                      ? currentDiscountRate !== 1
+                        ? `折扣後總價：${totalDiscounted} 元`
+                        : `總價：${totalDiscounted} 元`
+                      : ""}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* 切換 LOGO 區塊 - 位於狀態顯示區塊下方，且只有在選取店家後才顯示 */}
+            {selectedStoreId !== null && (
+              <div className="switch-logo-container-outer">
+                {selectedStoreId === FRIENDLY_TIME_CONFIG.sevenEleven.id ? (
+                  // 如果當前是小七，顯示全家橫向 LOGO
+                  <div
+                    className="switch-logo-wrapper"
+                    onClick={() =>
+                      handleLogoClick(FRIENDLY_TIME_CONFIG.familyMart.id)
+                    }
+                  >
+                    <img
+                      src={FRIENDLY_TIME_CONFIG.familyMart.horizontalLogo}
+                      alt="切換至全家"
+                      onerror="this.onerror=null; this.src='https://placehold.co/180x35/CCCCCC/333333?text=FamilyMart-Horizontal';"
+                    />
+                    <span className="switch-logo-text">切換至全家</span>
+                  </div>
+                ) : (
+                  // 如果當前是全家，顯示小七橫向 LOGO
+                  <div
+                    className="switch-logo-wrapper"
+                    onClick={() =>
+                      handleLogoClick(FRIENDLY_TIME_CONFIG.sevenEleven.id)
+                    }
+                  >
+                    <img
+                      src={FRIENDLY_TIME_CONFIG.sevenEleven.horizontalLogo}
+                      alt="切換至7-ELEVEN"
+                      onerror="this.onerror=null; this.src='https://placehold.co/180x35/CCCCCC/333333?text=7-ELEVEN-Horizontal';"
+                    />
+                    <span className="switch-logo-text">切換至小七</span>
+                  </div>
+                )}
+              </div>
+            )}
+          </>
+        );
+      }
+
+      // 將 App 組件渲染到 DOM 中的 #root 元素
+      // 使用 window.onload 確保 DOM 完全載入後再渲染 React 應用
+      window.onload = function () {
+        try {
+          ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+        } catch (error) {
+          console.error("Error rendering React app:", error);
+          // 應用程式載入失敗時，在頁面顯示一個提示
+          document.getElementById("root").innerHTML =
+            '<p style="color: red; text-align: center; font-size: 1.5em; padding: 20px;">應用程式載入失敗，請檢查瀏覽器主控台錯誤。</p>';
+        }
+      };
+    </script>
+  </body>
+</html>
