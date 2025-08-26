@@ -520,7 +520,15 @@
 
     <!-- Frosted Glass Footer -->
     <footer class="frosted-footer">
-      <span style="margin: 20px 0; display: flex; flex-direction: column; align-items: center; line-height: 1.6;">
+      <span
+        style="
+          margin: 20px 0;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          line-height: 1.6;
+        "
+      >
         <span>友善時光折扣查詢工具</span>
         <span>全家小七即時優惠時段 © 2025</span>
       </span>
@@ -531,7 +539,9 @@
     // 動態移動切換 LOGO 區塊（手機 intro-text 上方，桌面 footer 上方）
     function relocateSwitchLogoOuter() {
       const switchLogo = document.getElementById("switch-logo-outer");
-      const statusContainer = document.querySelector(".status-display-outer-container");
+      const statusContainer = document.querySelector(
+        ".status-display-outer-container"
+      );
       const footer = document.querySelector("footer.frosted-footer");
       if (!switchLogo) return;
       // 沒有選店家時直接隱藏
@@ -540,7 +550,10 @@
         // 手機：插入到 .status-display-outer-container 後面
         if (statusContainer) {
           if (statusContainer.nextSibling !== switchLogo) {
-            statusContainer.parentNode.insertBefore(switchLogo, statusContainer.nextSibling);
+            statusContainer.parentNode.insertBefore(
+              switchLogo,
+              statusContainer.nextSibling
+            );
           }
         } else {
           // 找不到插入點就隱藏
@@ -872,16 +885,26 @@
         }
         return 1;
       }, [selectedStoreId, currentTime]);
+
+      // 無條件進位 function
+      function alwaysCeil(num) {
+        return Math.ceil(num);
+      }
+
       const discountedItems = React.useMemo(
         () =>
           items.map((item) => {
             const p = parseFloat(item.price);
             if (isNaN(p) || p <= 0) return "";
-            return (
-              p * (currentDiscountRate !== 1 ? currentDiscountRate : 1)
-            ).toFixed(0);
+            const raw = p * (currentDiscountRate !== 1 ? currentDiscountRate : 1);
+            if (selectedStoreId === 'familyMart' || selectedStoreId === 'sevenEleven') {
+              // 全家、小七皆無條件進位
+              return alwaysCeil(raw);
+            } else {
+              return Math.round(raw);
+            }
           }),
-        [items, currentDiscountRate]
+        [items, currentDiscountRate, selectedStoreId]
       );
       const totalDiscounted = React.useMemo(() => {
         return discountedItems.reduce(
