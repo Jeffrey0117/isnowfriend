@@ -120,9 +120,9 @@
         margin: 0;
         background-color: #f0f2f5;
         color: #333;
-
         box-sizing: border-box; /* 確保 padding 不會增加總寬度 */
         position: relative; /* 為絕對定位的切換按鈕提供參考點 */
+        overflow-x: hidden; /* 防止橫向捲軸 */
       }
 
       /* 主卡片容器 - 預設為無卡片效果 */
@@ -223,16 +223,15 @@
 
       /* 選取後狀態：單一小 LOGO 外部容器 (位於狀態顯示區塊下方) */
       .switch-logo-container-outer {
-        width: 100%;
-        max-width: 450px; /* 與主卡片寬度一致 */
+        width: 100%; /* 預設100%避免超出 */
+        max-width: none;
         display: flex;
-        justify-content: center; /* 置中顯示 */
+        justify-content: center; /* 手機預設置中，桌面會覆蓋 */
         align-items: center;
-        padding: 15px 20px; /* 增加內邊距 */
+        padding: 15px 20px;
         box-sizing: border-box;
-        border-radius: 15px; /* 圓角 */
-        /* 桌面版絕對定位 */
-        position: static; /* 預設為 static (手機版) */
+        border-radius: 0;
+        position: static;
         bottom: auto;
         right: auto;
         z-index: auto;
@@ -342,8 +341,10 @@
         }
         /* 手機上切換 LOGO 樣式調整 */
         .switch-logo-container-outer {
-          padding: 10px 15px; /* 手機上調整內邊距 */
-          position: static; /* 確保手機上是正常流動 */
+          width: 100%; /* 手機強制100% */
+          padding: 10px 15px;
+          position: static;
+          justify-content: center;
         }
         .switch-logo-wrapper {
           padding: 6px 12px; /* 手機上更小的內邊距 */
@@ -370,14 +371,14 @@
           padding: 30px; /* 桌面版 LOGO 內邊距 */
         }
         .switch-logo-container-outer {
-          position: absolute; /* 桌面版絕對定位 */
-          bottom: 20px;
-          right: 20px;
-          width: auto; /* 寬度自適應內容 */
-          max-width: 300px; /* 限制最大寬度 */
-          padding: 0; /* 移除外部 padding */
-          box-shadow: none; /* 移除外部陰影 */
-          border-radius: 0; /* 移除外部圓角 */
+          width: 100vw;
+          max-width: none;
+          display: flex;
+          justify-content: flex-end;
+          align-items: center;
+          box-sizing: border-box;
+          border-radius: 0;
+          margin-bottom: 0;
         }
         .switch-logo-wrapper {
           padding: 12px 20px; /* 桌面版按鈕內邊距 */
@@ -476,6 +477,7 @@
         </div>
       </div>
     </header>
+
     <div class="content-wrapper">
       <!-- 介紹文字 -->
       <div class="intro-text">
@@ -509,15 +511,52 @@
       <div id="root" style="margin: 0 auto"></div>
     </div>
 
+    <!-- 切換 LOGO 區塊（移到 root 外面，footer 上方）-->
+    <div
+      id="switch-logo-outer"
+      class="switch-logo-container-outer"
+      style="display: none"
+    ></div>
+
     <!-- Frosted Glass Footer -->
     <footer class="frosted-footer">
-      <span style="margin: 20px 0">
-        友善時光折扣查詢工具 | 全家小七即時優惠時段 © 2025
+      <span style="margin: 20px 0; display: flex; flex-direction: column; align-items: center; line-height: 1.6;">
+        <span>友善時光折扣查詢工具</span>
+        <span>全家小七即時優惠時段 © 2025</span>
       </span>
     </footer>
   </body>
 
   <script type="text/babel">
+    // 動態移動切換 LOGO 區塊（手機 intro-text 上方，桌面 footer 上方）
+    function relocateSwitchLogoOuter() {
+      const switchLogo = document.getElementById("switch-logo-outer");
+      const statusContainer = document.querySelector(".status-display-outer-container");
+      const footer = document.querySelector("footer.frosted-footer");
+      if (!switchLogo) return;
+      // 沒有選店家時直接隱藏
+      if (switchLogo.style.display === "none") return;
+      if (window.innerWidth <= 600) {
+        // 手機：插入到 .status-display-outer-container 後面
+        if (statusContainer) {
+          if (statusContainer.nextSibling !== switchLogo) {
+            statusContainer.parentNode.insertBefore(switchLogo, statusContainer.nextSibling);
+          }
+        } else {
+          // 找不到插入點就隱藏
+          switchLogo.style.display = "none";
+        }
+      } else {
+        // 桌面：插入到 footer 前面
+        if (footer) {
+          if (footer.previousElementSibling !== switchLogo) {
+            footer.parentNode.insertBefore(switchLogo, footer);
+          }
+        } else {
+          switchLogo.style.display = "none";
+        }
+      }
+    }
     // 定義友善時光區間與折扣資訊
     const FRIENDLY_TIME_CONFIG = {
       sevenEleven: {
@@ -657,18 +696,65 @@
       React.useEffect(() => {
         const intervalId = setInterval(() => {
           setCurrentTime(new Date()); // 每 1000 毫秒 (1 秒) 更新一次時間
-        }, 1000); // 更改為 1000ms 讓秒數跳動
-
-        // 清除定時器，避免記憶體洩漏
+        }, 1000);
         return () => clearInterval(intervalId);
-      }, []); // 空依賴陣列表示只在組件 mount 和 unmount 時執行
+      }, []);
 
       // 處理店家 LOGO 點擊事件
       const handleLogoClick = (storeId) => {
         setSelectedStoreId(storeId);
       };
 
+      // 讓外部 LOGO 區塊可以切換 React 狀態
+      window.setSelectedStoreId = (storeId) => {
+        setSelectedStoreId(storeId);
+      };
+
+      // 外部 LOGO 區塊渲染函式
+      function renderSwitchLogoOuter(storeId) {
+        const outer = document.getElementById("switch-logo-outer");
+        if (!outer) return;
+        if (!storeId) {
+          outer.style.display = "none";
+          outer.innerHTML = "";
+          return;
+        }
+        let html = "";
+        if (storeId === FRIENDLY_TIME_CONFIG.sevenEleven.id) {
+          html = `
+            <div class="switch-logo-wrapper" onclick="window.setSelectedStoreId('familyMart')">
+              <img src="${FRIENDLY_TIME_CONFIG.familyMart.horizontalLogo}" alt="切換至全家" onerror="this.onerror=null; this.src='https://placehold.co/180x35/CCCCCC/333333?text=FamilyMart-Horizontal';" />
+              <span class="switch-logo-text">切換至全家</span>
+            </div>
+          `;
+        } else {
+          html = `
+            <div class="switch-logo-wrapper" onclick="window.setSelectedStoreId('sevenEleven')">
+              <img src="${FRIENDLY_TIME_CONFIG.sevenEleven.horizontalLogo}" alt="切換至7-ELEVEN" onerror="this.onerror=null; this.src='https://placehold.co/180x35/CCCCCC/333333?text=7-ELEVEN-Horizontal';" />
+              <span class="switch-logo-text">切換至小七</span>
+            </div>
+          `;
+        }
+        outer.innerHTML = html;
+        outer.style.display = "";
+      }
+
+      // 監控 selectedStoreId 變動時，渲染外部 LOGO 區塊
+      React.useEffect(() => {
+        renderSwitchLogoOuter(selectedStoreId);
+        // 每次選擇店家變動時都 relocate，確保插入點正確
+        setTimeout(() => {
+          relocateSwitchLogoOuter();
+        }, 0);
+      }, [selectedStoreId]);
+
       // 格式化時間為 HH:MM:SS 格式 (24小時制)
+      const formattedTime = React.useMemo(() => {
+        const hours = String(currentTime.getHours()).padStart(2, "0");
+        const minutes = String(currentTime.getMinutes()).padStart(2, "0");
+        const seconds = String(currentTime.getSeconds()).padStart(2, "0");
+        return `${hours}:${minutes}:${seconds}`;
+      }, [currentTime]);
 
       // 友善時光倒數提示 function
       function getFriendlyTimeNotice() {
@@ -676,46 +762,36 @@
         const storeConfig = FRIENDLY_TIME_CONFIG[selectedStoreId];
         const now = currentTime;
         const nowMinutes = now.getHours() * 60 + now.getMinutes();
-        // 取得所有時段，並標註開始/結束分鐘、折扣
         const periods = storeConfig.friendlyHours.map((r) => {
           const start = r.start.hour * 60 + (r.start.minute || 0);
           let end = r.end.hour * 60 + (r.end.minute || 0);
-          // 跨日處理
           if (end <= start) end += 1440;
           return { start, end, discount: r.discount };
         });
-        // 依照現在時間排序所有時段（跨日也能正確排序）
         const sorted = periods
-          .map((p) => ({
-            ...p,
-            start: p.start,
-            end: p.end,
-          }))
+          .map((p) => ({ ...p, start: p.start, end: p.end }))
           .sort((a, b) => a.start - b.start);
-        // 找出目前在哪個時段
         let inPeriod = null;
         for (const p of sorted) {
           let s = p.start,
             e = p.end;
-          if (nowMinutes < s) (s -= 1440), (e -= 1440); // 跨日修正
+          if (nowMinutes < s) (s -= 1440), (e -= 1440);
           if (nowMinutes >= s && nowMinutes < e) {
             inPeriod = p;
             break;
           }
         }
-        // 找出下一個時段
         let nextPeriod = null;
         let minDelta = Infinity;
         for (const p of sorted) {
           let s = p.start;
-          if (s <= nowMinutes) s += 1440; // 跨日
+          if (s <= nowMinutes) s += 1440;
           const delta = s - nowMinutes;
           if (delta > 0 && delta < minDelta) {
             minDelta = delta;
             nextPeriod = p;
           }
         }
-        // 找出本時段結束後的下一個時段（折扣變化）
         let nextChange = null;
         if (inPeriod) {
           let minChange = Infinity;
@@ -729,24 +805,20 @@
             }
           }
         }
-        // 格式化分鐘為「X小時Y分」
         function formatDelta(mins) {
           if (mins < 1) return "不到1分鐘";
           const h = Math.floor(mins / 60);
           const m = mins % 60;
           return (h ? h + "小時" : "") + (m ? m + "分" : !h ? "0分" : "");
         }
-        // 非友善時光，顯示距離下次開始
         if (!inPeriod && nextPeriod) {
           return `距離下次友善時光（${nextPeriod.discount}）還有${formatDelta(
             minDelta
           )}`;
         }
-        // 友善時光中，顯示距離結束與折扣變化
         if (inPeriod) {
           const timeToEnd = inPeriod.end - nowMinutes;
           let msg = `本時段剩餘${formatDelta(timeToEnd)}`;
-          // 折扣變化
           if (nextChange && nextChange.discount !== inPeriod.discount) {
             msg += `，再${formatDelta(nextChange.start - nowMinutes)}變成${
               nextChange.discount
@@ -756,28 +828,19 @@
         }
         return null;
       }
-      const formattedTime = React.useMemo(() => {
-        const hours = String(currentTime.getHours()).padStart(2, "0");
-        const minutes = String(currentTime.getMinutes()).padStart(2, "0");
-        const seconds = String(currentTime.getSeconds()).padStart(2, "0"); // 新增秒數
-        return `${hours}:${minutes}:${seconds}`;
-      }, [currentTime]); // 當 currentTime 改變時重新計算
 
-      // 根據選擇的店家判斷是否為友善時光，並準備顯示內容
+      // 狀態顯示內容
       const renderStatusContent = React.useMemo(() => {
         if (!selectedStoreId) {
           return (
             <p className="status-placeholder">請點擊上方 LOGO 查詢友善時光</p>
           );
         }
-
         const storeConfig = FRIENDLY_TIME_CONFIG[selectedStoreId];
         if (!storeConfig) {
           return <p className="status-placeholder">查詢錯誤，請重試</p>;
         }
-
         const result = isFriendlyTime(currentTime, storeConfig);
-
         return (
           <div style={{ width: "100%", textAlign: "center" }}>
             <h1 className="status-main-text">
@@ -789,21 +852,18 @@
             )}
           </div>
         );
-      }, [selectedStoreId, currentTime]); // 當 selectedStoreId 或 currentTime 改變時重新計算
+      }, [selectedStoreId, currentTime]);
 
-      // 多商品輸入清單（只保留價錢）
+      // 多商品輸入清單
       const [items, setItems] = React.useState([{ price: "" }]);
-      // 取得目前折扣倍率（如 65折=0.65，7折=0.7，8折=0.8），若非友善時光則為1
       const currentDiscountRate = React.useMemo(() => {
         if (!selectedStoreId) return 1;
         const storeConfig = FRIENDLY_TIME_CONFIG[selectedStoreId];
         const result = isFriendlyTime(currentTime, storeConfig);
         if (!result.isFriendly || !result.discount) return 1;
-        // 解析折扣字串（如65折、7折、8折）
         const match = result.discount.match(/(\d+)(?:\.(\d+))?折/);
         if (match) {
           const num = parseFloat(match[1] + (match[2] ? "." + match[2] : ""));
-          // 1~10折都視為0.1~1.0，其餘視為百分比
           if (num <= 10) {
             return num / 10;
           } else {
@@ -812,8 +872,6 @@
         }
         return 1;
       }, [selectedStoreId, currentTime]);
-
-      // 每個商品的折扣後金額（非友善時光時顯示原價）
       const discountedItems = React.useMemo(
         () =>
           items.map((item) => {
@@ -825,21 +883,15 @@
           }),
         [items, currentDiscountRate]
       );
-
-      // 總價（非友善時光時為原價總和）
       const totalDiscounted = React.useMemo(() => {
         return discountedItems.reduce(
           (sum, val) => sum + (parseInt(val) || 0),
           0
         );
       }, [discountedItems]);
-
-      // 根據選中的店家獲取背景 LOGO 圖片
       const cardBackgroundLogo = selectedStoreId
         ? `url(${FRIENDLY_TIME_CONFIG[selectedStoreId].logo})`
         : "none";
-
-      // 根據 selectedStoreId 決定 app-card-container 的 class
       const appCardClasses = `app-card-container ${
         selectedStoreId !== null ? "selected-state" : ""
       }`;
@@ -891,9 +943,7 @@
           {/* 友善時光狀態與折扣顯示 - 位於主卡片下方，且只有在選取店家後才顯示 */}
           {selectedStoreId !== null && (
             <div className="status-display-outer-container">
-              {renderStatusContent}{" "}
-              {/* 使用 renderStatusContent 而不是 renderStatusDisplay */}
-              {/* 友善時光倒數提示 */}
+              {renderStatusContent} {/* 友善時光倒數提示 */}
               <div
                 style={{
                   marginTop: 8,
@@ -1021,43 +1071,6 @@
               </div>
             </div>
           )}
-
-          {/* 切換 LOGO 區塊 - 位於狀態顯示區塊下方，且只有在選取店家後才顯示 */}
-          {selectedStoreId !== null && (
-            <div className="switch-logo-container-outer">
-              {selectedStoreId === FRIENDLY_TIME_CONFIG.sevenEleven.id ? (
-                // 如果當前是小七，顯示全家橫向 LOGO
-                <div
-                  className="switch-logo-wrapper"
-                  onClick={() =>
-                    handleLogoClick(FRIENDLY_TIME_CONFIG.familyMart.id)
-                  }
-                >
-                  <img
-                    src={FRIENDLY_TIME_CONFIG.familyMart.horizontalLogo}
-                    alt="切換至全家"
-                    onerror="this.onerror=null; this.src='https://placehold.co/180x35/CCCCCC/333333?text=FamilyMart-Horizontal';"
-                  />
-                  <span className="switch-logo-text">切換至全家</span>
-                </div>
-              ) : (
-                // 如果當前是全家，顯示小七橫向 LOGO
-                <div
-                  className="switch-logo-wrapper"
-                  onClick={() =>
-                    handleLogoClick(FRIENDLY_TIME_CONFIG.sevenEleven.id)
-                  }
-                >
-                  <img
-                    src={FRIENDLY_TIME_CONFIG.sevenEleven.horizontalLogo}
-                    alt="切換至7-ELEVEN"
-                    onerror="this.onerror=null; this.src='https://placehold.co/180x35/CCCCCC/333333?text=7-ELEVEN-Horizontal';"
-                  />
-                  <span className="switch-logo-text">切換至小七</span>
-                </div>
-              )}
-            </div>
-          )}
         </>
       );
     }
@@ -1069,10 +1082,20 @@
         ReactDOM.createRoot(document.getElementById("root")).render(<App />);
       } catch (error) {
         console.error("Error rendering React app:", error);
-        // 應用程式載入失敗時，在頁面顯示一個提示
         document.getElementById("root").innerHTML =
           '<p style="color: red; text-align: center; font-size: 1.5em; padding: 20px;">應用程式載入失敗，請檢查瀏覽器主控台錯誤。</p>';
       }
+      relocateSwitchLogoOuter();
+    };
+
+    window.addEventListener("resize", relocateSwitchLogoOuter);
+
+    // 讓 React 切換 LOGO 時也能同步移動位置
+    const origRenderSwitchLogoOuter = window.renderSwitchLogoOuter;
+    window.renderSwitchLogoOuter = function (...args) {
+      if (typeof origRenderSwitchLogoOuter === "function")
+        origRenderSwitchLogoOuter.apply(this, args);
+      relocateSwitchLogoOuter();
     };
   </script>
   <script
