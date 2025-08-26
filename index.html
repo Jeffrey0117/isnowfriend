@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>友善時光-折扣查詢(IsNowFriend)|乞丐超人|小七、全家折扣</title>
+    <title>友善時光-是或否(IsNowFriend)|乞丐超人|小七、全家折扣</title>
     <meta
       name="description"
       content="全家便利商店、7-11 小七友善時光折扣查詢，整理全家友善時光時間、小七打折時間，快速查詢即期品幾點開始打折。"
@@ -471,9 +471,9 @@
         loading="lazy"
       />
       <div class="header-texts">
-        <div class="header-title">友善時光折扣查詢(IsNowFriend)</div>
+        <div class="header-title">友善時光是或否(IsNowFriend)</div>
         <div class="header-subtitle">
-          全家 FamilyMart、小七 7-11 即時優惠時段、友善時光一覽表
+          全家 FamilyMart、小七 7-11 現在當下立馬告訴我，有沒有折扣？
         </div>
       </div>
     </header>
@@ -896,8 +896,12 @@
           items.map((item) => {
             const p = parseFloat(item.price);
             if (isNaN(p) || p <= 0) return "";
-            const raw = p * (currentDiscountRate !== 1 ? currentDiscountRate : 1);
-            if (selectedStoreId === 'familyMart' || selectedStoreId === 'sevenEleven') {
+            const raw =
+              p * (currentDiscountRate !== 1 ? currentDiscountRate : 1);
+            if (
+              selectedStoreId === "familyMart" ||
+              selectedStoreId === "sevenEleven"
+            ) {
               // 全家、小七皆無條件進位
               return alwaysCeil(raw);
             } else {
