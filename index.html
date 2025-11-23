@@ -14,6 +14,11 @@
       crossorigin
     ></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <!-- 引入自訂 JS 模組 -->
+    <script src="js/api.js"></script>
+    <script src="js/location.js"></script>
+    <script src="js/ui.js"></script>
     <style>
       /* 基礎 CSS 樣式 */
       body {
@@ -205,8 +210,595 @@
         text-shadow: none; /* 移除文字陰影 */
       }
 
+      /* 搜尋功能樣式已移除 - 直接使用庫存按鈕觸發位置搜尋 */
+
+      #back-to-initial {
+        position: fixed;
+        top: 20px;
+        left: 20px;
+        padding: 10px 20px;
+        background-color: #6c757d;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        z-index: 100;
+        transition: background-color 0.3s;
+      }
+
+      #back-to-initial:hover {
+        background-color: #5a6268;
+      }
+
+      .hidden {
+        display: none !important;
+      }
+
+      /* 載入指示器 */
+      #loading-indicator {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: rgba(0, 0, 0, 0.8);
+        color: white;
+        padding: 20px 40px;
+        border-radius: 10px;
+        z-index: 1000;
+        text-align: center;
+      }
+
+      .spinner {
+        border: 4px solid #f3f3f3;
+        border-top: 4px solid #007bff;
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        animation: spin 1s linear infinite;
+        margin: 0 auto 10px;
+      }
+
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+
+      /* 脈衝動畫（用於載入中狀態） */
+      @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.5; }
+      }
+
+      /* 淡入動畫（用於內容載入完成） */
+      @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(5px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+
+      /* 錯誤訊息 */
+      #error-message {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background-color: #dc3545;
+        color: white;
+        padding: 15px 20px;
+        border-radius: 8px;
+        z-index: 1000;
+        max-width: 300px;
+      }
+
+      /* ========================================
+         Friendly Cat 風格 - 門市列表樣式
+         ======================================== */
+
+      /* 門市卡片容器 */
+      .store-card {
+        background: #ffffff;
+        border-radius: 16px;
+        padding: 0;
+        margin-bottom: 16px;
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        overflow: hidden;
+        cursor: pointer;
+      }
+
+      .store-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
+      }
+
+      /* 門市頭部區域 */
+      .store-header {
+        padding: 16px;
+        background: #ffffff;
+        border-bottom: 1px solid #f0f0f0;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      /* 門市標題區（logo + 店名 + 地圖圖標） */
+      .store-title-section {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        flex: 1;
+      }
+
+      /* 門市 Logo */
+      .store-logo {
+        width: 24px;
+        height: 24px;
+        object-fit: contain;
+        flex-shrink: 0;
+      }
+
+      /* 門市名稱 */
+      .store-name {
+        font-size: 1.1em;
+        font-weight: 600;
+        color: #1a1a1a;
+        flex: 1;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      /* Google Maps 連結圖標 */
+      .map-link-icon {
+        width: 20px;
+        height: 20px;
+        opacity: 0.6;
+        transition: opacity 0.2s;
+        cursor: pointer;
+        flex-shrink: 0;
+      }
+
+      .map-link-icon:hover {
+        opacity: 1;
+      }
+
+      /* 門市資訊區域（距離） */
+      .store-distance-section {
+        padding: 12px 16px;
+        background: #fafafa;
+        border-bottom: 1px solid #f0f0f0;
+      }
+
+      .store-distance {
+        font-size: 0.95em;
+        color: #666;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .store-distance::before {
+        content: "📍";
+        font-size: 1.1em;
+      }
+
+      /* 商品分類網格區域 */
+      .store-categories-section {
+        padding: 16px;
+        background: #ffffff;
+      }
+
+      /* 商品分類網格 */
+      .store-categories-grid {
+        display: flex;
+        gap: 12px;
+        overflow-x: auto;
+        padding-bottom: 4px;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: thin;
+        scrollbar-color: #e0e0e0 transparent;
+      }
+
+      .store-categories-grid::-webkit-scrollbar {
+        height: 4px;
+      }
+
+      .store-categories-grid::-webkit-scrollbar-track {
+        background: transparent;
+      }
+
+      .store-categories-grid::-webkit-scrollbar-thumb {
+        background: #e0e0e0;
+        border-radius: 2px;
+      }
+
+      /* 單個分類項目 */
+      .store-category-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        min-width: 72px;
+        text-align: center;
+        position: relative;
+      }
+
+      /* 分類圖片 */
+      .store-category-image {
+        width: 56px;
+        height: 56px;
+        border-radius: 8px;
+        object-fit: cover;
+        background: #f5f5f5;
+        margin-bottom: 6px;
+      }
+
+      /* 分類名稱 */
+      .store-category-name {
+        font-size: 0.8em;
+        color: #666;
+        margin-bottom: 4px;
+        white-space: nowrap;
+      }
+
+      /* 數量徽章 - Friendly Cat 橙色風格 */
+      .store-category-badge {
+        position: absolute;
+        top: -4px;
+        right: -4px;
+        background: #ff6b35;
+        color: white;
+        font-size: 0.75em;
+        font-weight: 600;
+        padding: 2px 6px;
+        border-radius: 10px;
+        min-width: 20px;
+        text-align: center;
+        box-shadow: 0 2px 4px rgba(255, 107, 53, 0.3);
+      }
+
+      /* 門市地址（隱藏但保留資料） */
+      .store-address {
+        display: none;
+      }
+
+      /* 查看商品按鈕（整合在卡片點擊） */
+      .view-products-btn {
+        display: none;
+      }
+
+      /* 商品分類樣式 */
+      .selected-store-info {
+        text-align: center;
+        margin-bottom: 25px;
+        padding: 20px;
+        background: #f8f9fa;
+        border-radius: 12px;
+      }
+
+      .selected-store-info h2 {
+        font-size: 1.5em;
+        color: #333;
+        margin-bottom: 8px;
+      }
+
+      .selected-store-info p {
+        color: #666;
+        margin: 4px 0;
+      }
+
+      .categories-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+        gap: 15px;
+        margin-top: 20px;
+      }
+
+      .category-card {
+        background: white;
+        border-radius: 12px;
+        padding: 15px;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s;
+        border: 2px solid #e9ecef;
+        position: relative;
+      }
+
+      .category-card:hover {
+        transform: translateY(-5px);
+        border-color: #007bff;
+        box-shadow: 0 4px 12px rgba(0,123,255,0.2);
+      }
+
+      .category-card img {
+        width: 80px;
+        height: 80px;
+        object-fit: contain;
+        margin-bottom: 10px;
+      }
+
+      .category-card h3 {
+        font-size: 1em;
+        color: #333;
+        margin-bottom: 8px;
+      }
+
+      .qty-badge {
+        display: inline-block;
+        background: #ff9800;
+        color: white;
+        padding: 4px 12px;
+        border-radius: 12px;
+        font-size: 0.9em;
+        font-weight: bold;
+      }
+
+      /* 商品項目樣式 */
+      .category-header {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        margin-bottom: 20px;
+      }
+
+      .back-btn {
+        padding: 8px 16px;
+        background: #6c757d;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 1em;
+      }
+
+      .back-btn:hover {
+        background: #5a6268;
+      }
+
+      .category-header h2 {
+        font-size: 1.5em;
+        color: #333;
+      }
+
+      .items-list {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .item-card {
+        background: white;
+        border-radius: 10px;
+        padding: 15px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border: 1px solid #e9ecef;
+      }
+
+      .item-info h3 {
+        font-size: 1.1em;
+        color: #333;
+        margin-bottom: 5px;
+      }
+
+      .item-qty {
+        font-size: 0.9em;
+        color: #666;
+      }
+
+      .item-price {
+        text-align: right;
+      }
+
+      .original-price {
+        display: block;
+        text-decoration: line-through;
+        color: #999;
+        font-size: 0.9em;
+      }
+
+      .discount-price {
+        display: block;
+        color: #28a745;
+        font-size: 1.3em;
+        font-weight: bold;
+      }
+
+      .discount-label {
+        display: block;
+        color: #dc3545;
+        font-size: 0.85em;
+        margin-top: 2px;
+      }
+
+      .price {
+        font-size: 1.2em;
+        font-weight: bold;
+        color: #333;
+      }
+
+      .no-results {
+        text-align: center;
+        padding: 40px 20px;
+        color: #666;
+      }
+
+      /* ========================================
+         库存查询按钮样式
+         ======================================== */
+
+      /* 库存按钮基础样式 */
+      .inventory-button {
+        /* 尺寸与间距 */
+        width: 100%;
+        max-width: 400px;
+        padding: 16px 24px;
+        margin: 20px auto 10px;
+
+        /* 颜色与背景 - 風格 7: 極簡黑白 */
+        background: #333;
+        color: #ffffff;
+        border: none;
+
+        /* 形状与效果 */
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+
+        /* 文字样式 */
+        font-size: 1.1em;
+        font-weight: 600;
+        text-align: center;
+        letter-spacing: 0.5px;
+
+        /* 交互 */
+        cursor: pointer;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+        /* 布局 */
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+      }
+
+      /* 悬停效果（桌面版） */
+      .inventory-button:hover {
+        background: #000;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        transform: translateY(-2px);
+      }
+
+      /* 按下效果 */
+      .inventory-button:active {
+        transform: translateY(0px);
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+      }
+
+      /* 禁用状态 */
+      .inventory-button:disabled {
+        background: #cccccc;
+        cursor: not-allowed;
+        box-shadow: none;
+        opacity: 0.6;
+      }
+
+      /* 出现动画 */
+      @keyframes slideInUp {
+        from {
+          opacity: 0;
+          transform: translateY(20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .inventory-button.appear {
+        animation: slideInUp 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+
+      /* 消失动画 */
+      @keyframes slideOutDown {
+        from {
+          opacity: 1;
+          transform: translateY(0);
+        }
+        to {
+          opacity: 0;
+          transform: translateY(20px);
+        }
+      }
+
+      .inventory-button.disappear {
+        animation: slideOutDown 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+
       /* 響應式設計 */
       @media (max-width: 600px) {
+        /* 門市卡片手機版調整 */
+        .store-card {
+          border-radius: 12px;
+          margin-bottom: 12px;
+        }
+
+        .store-header {
+          padding: 12px;
+        }
+
+        .store-title-section {
+          gap: 8px;
+        }
+
+        .store-logo {
+          width: 20px;
+          height: 20px;
+        }
+
+        .store-name {
+          font-size: 1em;
+        }
+
+        .map-link-icon {
+          width: 18px;
+          height: 18px;
+        }
+
+        .store-distance-section {
+          padding: 10px 12px;
+        }
+
+        .store-distance {
+          font-size: 0.9em;
+        }
+
+        .store-categories-section {
+          padding: 12px;
+        }
+
+        .store-categories-grid {
+          gap: 10px;
+        }
+
+        .store-category-item {
+          min-width: 60px;
+        }
+
+        .store-category-image {
+          width: 48px;
+          height: 48px;
+          border-radius: 6px;
+        }
+
+        .store-category-name {
+          font-size: 0.75em;
+        }
+
+        .store-category-badge {
+          font-size: 0.7em;
+          padding: 2px 5px;
+          border-radius: 8px;
+          min-width: 18px;
+        }
+
+        /* 其他分類網格手機版調整 */
+        .categories-grid {
+          grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+          gap: 10px;
+        }
+
+        .category-card img {
+          width: 60px;
+          height: 60px;
+        }
+
+        #back-to-initial {
+          top: 10px;
+          left: 10px;
+          padding: 8px 16px;
+          font-size: 0.9em;
+        }
         body {
           padding: 15px;
         }
@@ -265,6 +857,25 @@
         .switch-logo-text {
           font-size: 0.9em;
         }
+
+        /* 手机版库存按钮样式 */
+        .inventory-button {
+          padding: 14px 20px;
+          font-size: 1em;
+          margin: 15px auto 8px;
+          border-radius: 8px;
+        }
+
+        /* 手机版不显示悬停效果（触摸屏） */
+        .inventory-button:hover {
+          transform: none;
+        }
+
+        /* 触摸反馈 */
+        .inventory-button:active {
+          background: #000;
+          transform: scale(0.98);
+        }
       }
 
       /* 桌面版面 (> 600px) 專用樣式 */
@@ -296,7 +907,30 @@
     </style>
   </head>
   <body>
+    <!-- 返回初始狀態按鈕 -->
+    <button id="back-to-initial" class="hidden">← 返回</button>
+
+    <!-- 載入指示器 -->
+    <div id="loading-indicator" class="hidden">
+      <div class="spinner"></div>
+      <p id="loading-text">載入中...</p>
+    </div>
+
+    <!-- 錯誤訊息 -->
+    <div id="error-message" class="hidden">
+      <p id="error-text"></p>
+    </div>
+
     <div id="root"></div>
+
+    <!-- 店家列表容器 -->
+    <div id="store-list-container" class="hidden" style="width: 100%; max-width: 450px; margin: 20px auto;"></div>
+
+    <!-- 商品分類容器 -->
+    <div id="product-categories-container" class="hidden" style="width: 100%; max-width: 450px; margin: 20px auto;"></div>
+
+    <!-- 商品項目容器 -->
+    <div id="product-items-container" class="hidden" style="width: 100%; max-width: 450px; margin: 20px auto;"></div>
 
     <script type="text/babel">
       // 定義友善時光區間與折扣資訊
@@ -447,6 +1081,13 @@
         // 處理店家 LOGO 點擊事件
         const handleLogoClick = (storeId) => {
           setSelectedStoreId(storeId);
+          // 設定品牌選擇（但不立即搜尋）
+          const brandMap = {
+            'sevenEleven': '7-11',
+            'familyMart': '全家'
+          };
+          UIManager.state.selectedBrand = brandMap[storeId];
+          console.log(`🏪 選擇品牌: ${brandMap[storeId]}`);
         };
 
         // 格式化時間為 HH:MM:SS 格式 (24小時制)
@@ -572,6 +1213,23 @@
           );
         }, [selectedStoreId, currentTime]); // 當 selectedStoreId 或 currentTime 改變時重新計算
 
+        // 計算友善時光結果（用於條件渲染庫存按鈕）
+        const friendlyTimeResult = React.useMemo(() => {
+          if (!selectedStoreId) return { isFriendly: false };
+          const storeConfig = FRIENDLY_TIME_CONFIG[selectedStoreId];
+          return isFriendlyTime(currentTime, storeConfig);
+        }, [selectedStoreId, currentTime]);
+
+        // 庫存按鈕點擊處理函數 - 直接觸發位置搜尋
+        const handleInventoryClick = () => {
+          // 直接調用位置搜尋功能
+          if (typeof UIManager !== 'undefined' && typeof UIManager.handleLocationSearch === 'function') {
+            UIManager.handleLocationSearch();
+          } else {
+            console.error('UIManager 尚未初始化或 handleLocationSearch 函數不存在');
+          }
+        };
+
         // 多商品輸入清單（只保留價錢）
         const [items, setItems] = React.useState([{ price: "" }]);
         // 取得目前折扣倍率（如 65折=0.65，7折=0.7，8折=0.8），若非友善時光則為1
@@ -685,6 +1343,19 @@
                 >
                   {getFriendlyTimeNotice()}
                 </div>
+
+                {/* 庫存查詢按鈕 - 只在友善時光顯示 */}
+                {friendlyTimeResult.isFriendly && (
+                  <button
+                    className="inventory-button appear"
+                    onClick={handleInventoryClick}
+                    aria-label="查看附近門市庫存"
+                  >
+                    <span role="img" aria-label="package">📦</span>
+                    查看附近門市庫存
+                  </button>
+                )}
+
                 {/* 多商品清單輸入區塊 */}
                 <div style={{ marginTop: 20, width: "100%" }}>
                   <div
@@ -848,6 +1519,11 @@
       window.onload = function () {
         try {
           ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+
+          // 初始化 UIManager（位置搜尋功能）
+          if (typeof UIManager !== 'undefined' && typeof UIManager.init === 'function') {
+            UIManager.init();
+          }
         } catch (error) {
           console.error("Error rendering React app:", error);
           // 應用程式載入失敗時，在頁面顯示一個提示
@@ -856,5 +1532,6 @@
         }
       };
     </script>
+
   </body>
 </html>
