@@ -10,7 +10,8 @@
       "mcp__chrome-devtools__take_screenshot",
       "mcp__chrome-devtools__take_snapshot",
       "mcp__chrome-devtools__click",
-      "Bash(cat:*)"
+      "Bash(cat:*)",
+      "WebFetch(domain:web.archive.org)"
     ],
     "deny": [],
     "ask": []

@@ -22,9 +22,10 @@
     <style>
       /* 毛玻璃質感 Header - 強化版 */
       .frosted-header {
-        margin: 0 auto 32px auto;
+        margin: 0;
+        margin-bottom: 32px;
         min-height: 72px;
-        padding: 22px 0 18px 38px;
+        padding: 22px 38px 18px 38px;
         background: rgba(36, 38, 48, 0.92);
         box-shadow: 0 6px 32px rgba(30, 32, 40, 0.18);
         backdrop-filter: blur(18px) saturate(1.7);
@@ -88,34 +89,59 @@
       .content-wrapper {
         display: flex;
         flex-direction: column;
-        gap: 20px;
+        gap: 40px;
         width: 100%;
-        max-width: 800px;
+        max-width: 1200px;
         margin: 0 auto;
-        padding: 0 16px;
+        padding: 0 40px;
         box-sizing: border-box;
+        align-items: center;
       }
 
       .intro-text {
+        width: 100%;
         font-size: 1rem;
         line-height: 1.6;
+        text-align: center;
       }
 
       .intro-text h1 {
-        font-size: 1.6rem;
-        margin-bottom: 12px;
+        font-size: 2rem;
+        margin-bottom: 16px;
+        color: #333;
       }
 
       .intro-text h2 {
-        font-size: 1.3rem;
-        margin-top: 20px;
+        font-size: 1.5rem;
+        margin-top: 24px;
+        margin-bottom: 12px;
+        color: #444;
+      }
+
+      .intro-text ul {
+        text-align: left;
+        display: inline-block;
+        margin-left: 20px;
+        margin-bottom: 16px;
+      }
+
+      .intro-text li {
         margin-bottom: 8px;
+      }
+
+      .app-section {
+        width: 100%;
+        max-width: 600px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
       }
 
       @media (max-width: 767px) {
         .content-wrapper {
           flex-direction: column-reverse;
-          margin-top: 30px;
+          padding: 0 16px;
+          gap: 20px;
         }
         .intro-text {
           text-align: left;
@@ -123,6 +149,14 @@
         }
         .intro-text h1 {
           font-size: 1.4rem;
+          text-align: left;
+        }
+        .intro-text h2 {
+          font-size: 1.2rem;
+          text-align: left;
+        }
+        .intro-text ul {
+          display: block;
         }
       }
 
@@ -162,13 +196,13 @@
         font-family: "Inter", "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
         display: flex;
         flex-direction: column; /* 讓內容垂直堆疊 */
-        justify-content: center;
+        justify-content: flex-start;
         align-items: center;
         min-height: 100vh;
         margin: 0;
         background-color: #f0f2f5;
         color: #333;
-        padding: 20px; /* 增加整體內邊距 */
+        padding: 0; /* 移除整體內邊距 */
         box-sizing: border-box; /* 確保 padding 不會增加總寬度 */
         position: relative; /* 為絕對定位的切換按鈕提供參考點 */
       }
@@ -1089,22 +1123,25 @@
         </p>
       </div>
 
-      <!-- 返回初始狀態按鈕 -->
-      <button id="back-to-initial" class="hidden">← 返回</button>
-
-      <!-- 載入指示器 -->
-      <div id="loading-indicator" class="hidden">
-        <div class="spinner"></div>
-        <p id="loading-text">載入中...</p>
+      <!-- 應用程式區域 -->
+      <div class="app-section">
+        <!-- React App -->
+        <div id="root"></div>
       </div>
+    </div>
 
-      <!-- 錯誤訊息 -->
-      <div id="error-message" class="hidden">
-        <p id="error-text"></p>
-      </div>
+    <!-- 返回初始狀態按鈕 -->
+    <button id="back-to-initial" class="hidden">← 返回</button>
 
-      <!-- React App -->
-      <div id="root" style="margin: 0 auto"></div>
+    <!-- 載入指示器 -->
+    <div id="loading-indicator" class="hidden">
+      <div class="spinner"></div>
+      <p id="loading-text">載入中...</p>
+    </div>
+
+    <!-- 錯誤訊息 -->
+    <div id="error-message" class="hidden">
+      <p id="error-text"></p>
     </div>
 
     <!-- 店家列表容器 -->
