@@ -95,6 +95,7 @@
         margin: 0 auto;
         padding: 0 16px 100px 16px;
         box-sizing: border-box;
+        position: relative; /* 為 absolute 定位的子元素提供參考 */
       }
 
       .intro-text {
@@ -178,6 +179,7 @@
         justify-content: center;
         width: 100%;
         max-width: 450px; /* 模擬手機APP介面寬度，略微放寬 */
+        margin: 0 auto; /* 置中顯示 */
         padding: 20px;
         padding-top: 50px; /* 增加頂部內邊距，為時間顯示留出空間 */
         box-sizing: border-box;
@@ -255,6 +257,7 @@
       .status-display-outer-container {
         width: 100%;
         max-width: 450px; /* 與主卡片寬度一致 */
+        margin: 0 auto; /* 置中顯示 */
         display: flex;
         flex-direction: column;
         justify-content: center;
@@ -1023,14 +1026,13 @@
           padding: 30px; /* 桌面版 LOGO 內邊距 */
         }
         .switch-logo-container-outer {
-          position: absolute; /* 桌面版絕對定位 */
-          bottom: 20px;
-          right: 20px;
-          width: auto; /* 寬度自適應內容 */
-          max-width: 300px; /* 限制最大寬度 */
-          padding: 0; /* 移除外部 padding */
-          box-shadow: none; /* 移除外部陰影 */
-          border-radius: 0; /* 移除外部圓角 */
+          width: 100%;
+          max-width: 450px;
+          margin: 0 auto; /* 置中顯示 */
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          padding: 15px 20px;
         }
         .switch-logo-wrapper {
           padding: 12px 20px; /* 桌面版按鈕內邊距 */
@@ -1402,6 +1404,16 @@
 
         // 庫存按鈕點擊處理函數 - 直接觸發位置搜尋
         const handleInventoryClick = () => {
+          // 確保 selectedBrand 與目前顯示的品牌一致
+          const brandMap = {
+            'sevenEleven': '7-11',
+            'familyMart': '全家'
+          };
+          if (selectedStoreId && UIManager) {
+            UIManager.state.selectedBrand = brandMap[selectedStoreId];
+            console.log(`📦 查看庫存 - 品牌: ${brandMap[selectedStoreId]}`);
+          }
+
           // 直接調用位置搜尋功能
           if (typeof UIManager !== 'undefined' && typeof UIManager.handleLocationSearch === 'function') {
             UIManager.handleLocationSearch();

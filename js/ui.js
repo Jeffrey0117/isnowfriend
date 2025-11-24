@@ -182,12 +182,20 @@ const UIManager = {
     if (!container) return;
 
     if (stores.length === 0) {
+      // 顯示品牌特定的無門市提示
+      const brandText = this.state.selectedBrand || '附近';
       container.innerHTML = `
-        <div class="no-results">
-          <p>附近沒有找到店家</p>
-          <p class="text-sm text-gray-500">請嘗試搜尋其他地點</p>
+        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px 25px; border-radius: 12px; text-align: center; box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);">
+          <div style="font-size: 1.2em; font-weight: 600;">
+            ${this.state.selectedBrand ? `附近的 ${this.state.selectedBrand} 門市目前皆無庫存` : '附近的門市目前皆無庫存'}
+          </div>
+          <div style="font-size: 0.95em; opacity: 0.9; margin-top: 8px;">
+            請稍後再試
+          </div>
         </div>
       `;
+      // 顯示店家列表容器（即使是空的）
+      this.toggleView('store-list');
       return;
     }
 
@@ -201,11 +209,8 @@ const UIManager = {
     // 添加提示文字和門市列表
     const noticeHTML = `
       <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 15px 20px; border-radius: 12px; margin-bottom: 20px; text-align: center; box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);">
-        <div style="font-size: 1.1em; font-weight: 600; margin-bottom: 5px;">
-          📦 友善時光庫存查詢
-        </div>
-        <div style="font-size: 0.9em; opacity: 0.95;">
-          ${this.state.selectedBrand ? `只顯示 ${this.state.selectedBrand} ` : ''}有庫存的門市
+        <div style="font-size: 1.2em; font-weight: 600;">
+          只顯示有庫存的門市
         </div>
       </div>
     `;
