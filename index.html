@@ -88,60 +88,36 @@
       /* content-wrapper 和 intro-text 樣式 */
       .content-wrapper {
         display: flex;
-        flex-direction: column;
-        gap: 40px;
+        flex-direction: column; /* 桌機預設：文字在上、root在下 */
+        gap: 20px;
         width: 100%;
-        max-width: 1200px;
+        max-width: 800px;
         margin: 0 auto;
-        padding: 0 40px;
+        padding: 0 16px 100px 16px;
         box-sizing: border-box;
-        align-items: center;
       }
 
       .intro-text {
-        width: 100%;
         font-size: 1rem;
         line-height: 1.6;
-        text-align: center;
       }
 
       .intro-text h1 {
-        font-size: 2rem;
-        margin-bottom: 16px;
-        color: #333;
+        font-size: 1.6rem;
+        margin-bottom: 12px;
       }
 
       .intro-text h2 {
-        font-size: 1.5rem;
-        margin-top: 24px;
-        margin-bottom: 12px;
-        color: #444;
-      }
-
-      .intro-text ul {
-        text-align: left;
-        display: inline-block;
-        margin-left: 20px;
-        margin-bottom: 16px;
-      }
-
-      .intro-text li {
+        font-size: 1.3rem;
+        margin-top: 20px;
         margin-bottom: 8px;
-      }
-
-      .app-section {
-        width: 100%;
-        max-width: 600px;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
       }
 
       @media (max-width: 767px) {
         .content-wrapper {
-          flex-direction: column-reverse;
-          padding: 0 16px;
-          gap: 20px;
+          flex-direction: column-reverse; /* 手機：顛倒，root 在上、文字在下 */
+          margin-top: 30px;
+          padding: 0 16px 80px 16px;
         }
         .intro-text {
           text-align: left;
@@ -149,14 +125,6 @@
         }
         .intro-text h1 {
           font-size: 1.4rem;
-          text-align: left;
-        }
-        .intro-text h2 {
-          font-size: 1.2rem;
-          text-align: left;
-        }
-        .intro-text ul {
-          display: block;
         }
       }
 
@@ -194,17 +162,11 @@
       /* 基礎 CSS 樣式 */
       body {
         font-family: "Inter", "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-        display: flex;
-        flex-direction: column; /* 讓內容垂直堆疊 */
-        justify-content: flex-start;
-        align-items: center;
-        min-height: 100vh;
         margin: 0;
         background-color: #f0f2f5;
         color: #333;
-        padding: 0; /* 移除整體內邊距 */
-        box-sizing: border-box; /* 確保 padding 不會增加總寬度 */
-        position: relative; /* 為絕對定位的切換按鈕提供參考點 */
+        padding: 0;
+        box-sizing: border-box;
       }
 
       /* 主卡片容器 - 預設為無卡片效果 */
@@ -805,7 +767,7 @@
         width: 100%;
         max-width: 400px;
         padding: 16px 24px;
-        margin: 20px auto 10px;
+        margin: 20px auto 20px;
 
         /* 颜色与背景 - 風格 7: 極簡黑白 */
         background: #333;
@@ -1033,7 +995,7 @@
         .inventory-button {
           padding: 14px 20px;
           font-size: 1em;
-          margin: 15px auto 8px;
+          margin: 15px auto 15px;
           border-radius: 8px;
         }
 
@@ -1123,11 +1085,8 @@
         </p>
       </div>
 
-      <!-- 應用程式區域 -->
-      <div class="app-section">
-        <!-- React App -->
-        <div id="root"></div>
-      </div>
+      <!-- React App -->
+      <div id="root"></div>
     </div>
 
     <!-- 返回初始狀態按鈕 -->
