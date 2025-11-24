@@ -20,6 +20,143 @@
     <script src="js/location.js"></script>
     <script src="js/ui.js"></script>
     <style>
+      /* 毛玻璃質感 Header - 強化版 */
+      .frosted-header {
+        margin: 0 auto 32px auto;
+        min-height: 72px;
+        padding: 22px 0 18px 38px;
+        background: rgba(36, 38, 48, 0.92);
+        box-shadow: 0 6px 32px rgba(30, 32, 40, 0.18);
+        backdrop-filter: blur(18px) saturate(1.7);
+        -webkit-backdrop-filter: blur(18px) saturate(1.7);
+        border-bottom: 1.5px solid rgba(80, 80, 90, 0.18);
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: flex-start;
+        width: 100%;
+        border-radius: 0;
+        user-select: none;
+        transition: background 0.3s;
+        box-sizing: border-box;
+      }
+      .frosted-header .header-logo {
+        width: 80px;
+        height: 80px;
+        min-width: 80px;
+        min-height: 80px;
+        border-radius: 50%;
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.13);
+        object-fit: cover;
+        margin-right: 28px;
+        background: #23242a;
+        border: 1.5px solid #444;
+        display: block;
+      }
+      .frosted-header .header-texts {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        justify-content: center;
+      }
+      .frosted-header .header-title {
+        font-size: 2.3em;
+        font-weight: 700;
+        color: #fff;
+        letter-spacing: 0.04em;
+        margin-bottom: 0.18em;
+        text-align: left;
+        line-height: 1.1;
+        text-shadow: 0 2px 12px rgba(0, 0, 0, 0.13);
+      }
+      .frosted-header .header-subtitle {
+        font-size: 1.13em;
+        color: #e0e0e0;
+        font-weight: 400;
+        letter-spacing: 0.02em;
+        text-align: left;
+        line-height: 1.5;
+        opacity: 0.92;
+      }
+      @media (max-width: 600px) {
+        .frosted-header {
+          display: none !important;
+        }
+      }
+
+      /* content-wrapper 和 intro-text 樣式 */
+      .content-wrapper {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        width: 100%;
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 0 16px;
+        box-sizing: border-box;
+      }
+
+      .intro-text {
+        font-size: 1rem;
+        line-height: 1.6;
+      }
+
+      .intro-text h1 {
+        font-size: 1.6rem;
+        margin-bottom: 12px;
+      }
+
+      .intro-text h2 {
+        font-size: 1.3rem;
+        margin-top: 20px;
+        margin-bottom: 8px;
+      }
+
+      @media (max-width: 767px) {
+        .content-wrapper {
+          flex-direction: column-reverse;
+          margin-top: 30px;
+        }
+        .intro-text {
+          text-align: left;
+          font-size: 1rem;
+        }
+        .intro-text h1 {
+          font-size: 1.4rem;
+        }
+      }
+
+      /* 毛玻璃質感 Footer */
+      .frosted-footer {
+        margin: 0 auto;
+        margin-top: 50px;
+        min-height: 28px;
+        padding: 12px 0 10px 0;
+        background: rgba(36, 38, 48, 0.92);
+        box-shadow: 0 -2px 18px rgba(30, 32, 40, 0.13);
+        backdrop-filter: blur(14px) saturate(1.5);
+        -webkit-backdrop-filter: blur(14px) saturate(1.5);
+        border-top: 1.5px solid rgba(80, 80, 90, 0.18);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1em;
+        color: #e0e0e0;
+        letter-spacing: 0.03em;
+        font-family: "Inter", "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        transition: background 0.3s;
+        user-select: none;
+        width: 100%;
+        border-radius: 0;
+      }
+      @media (max-width: 600px) {
+        .frosted-footer {
+          font-size: 0.92em;
+          min-height: 22px;
+          padding: 8px 0 5px 0;
+        }
+      }
+
       /* 基礎 CSS 樣式 */
       body {
         font-family: "Inter", "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
@@ -907,21 +1044,68 @@
     </style>
   </head>
   <body>
-    <!-- 返回初始狀態按鈕 -->
-    <button id="back-to-initial" class="hidden">← 返回</button>
+    <!-- Frosted Glass Header -->
+    <header class="frosted-header">
+      <img
+        src="myicon.png"
+        alt="友善時光LOGO"
+        class="header-logo"
+        loading="lazy"
+      />
+      <div class="header-texts">
+        <div class="header-title">友善時光折扣查詢(IsNowFriend)</div>
+        <div class="header-subtitle">
+          全家 FamilyMart、小七 7-11 即時優惠時段、友善時光一覽表
+        </div>
+      </div>
+    </header>
 
-    <!-- 載入指示器 -->
-    <div id="loading-indicator" class="hidden">
-      <div class="spinner"></div>
-      <p id="loading-text">載入中...</p>
+    <div class="content-wrapper">
+      <!-- 介紹文字 -->
+      <div class="intro-text">
+        <h1>全家 & 小七 友善時光（乞丐時光）折扣時間表</h1>
+        <p>
+          想知道全家便利商店和小七 7-11 什麼時候打折嗎？<br />
+          我們整理了完整的「友善時光」資訊，包括全家友善時光時間、小七打折時段，
+          幫助你快速查詢折扣（俗稱乞丐時光），避免錯過便宜好康。
+        </p>
+
+        <h2>全家友善時光折扣</h2>
+        <ul>
+          <li>10:00 - 17:00：7折（飯糰、壽司、手卷、便當類等）</li>
+          <li>17:00 - 00:00：7折（便當、三明治、沙拉、湯品等）</li>
+        </ul>
+
+        <h2>小七 7-11 友善時光折扣</h2>
+        <ul>
+          <li>10:00 - 17:00：65折（鮮食麵類與米飯）</li>
+          <li>19:00 - 19:59：8折（三角飯糰、鮮食麵）</li>
+          <li>20:00 - 03:00：65折（三角飯糰、鮮食麵）</li>
+        </ul>
+
+        <p>
+          使用本站「友善時光查詢工具」，就能立即確認全家或小七現在是否打折，
+          幾點有折扣，以及折扣倒數計時。
+        </p>
+      </div>
+
+      <!-- 返回初始狀態按鈕 -->
+      <button id="back-to-initial" class="hidden">← 返回</button>
+
+      <!-- 載入指示器 -->
+      <div id="loading-indicator" class="hidden">
+        <div class="spinner"></div>
+        <p id="loading-text">載入中...</p>
+      </div>
+
+      <!-- 錯誤訊息 -->
+      <div id="error-message" class="hidden">
+        <p id="error-text"></p>
+      </div>
+
+      <!-- React App -->
+      <div id="root" style="margin: 0 auto"></div>
     </div>
-
-    <!-- 錯誤訊息 -->
-    <div id="error-message" class="hidden">
-      <p id="error-text"></p>
-    </div>
-
-    <div id="root"></div>
 
     <!-- 店家列表容器 -->
     <div id="store-list-container" class="hidden" style="width: 100%; max-width: 450px; margin: 20px auto;"></div>
@@ -1533,5 +1717,11 @@
       };
     </script>
 
+    <!-- Frosted Glass Footer -->
+    <footer class="frosted-footer">
+      <span style="margin: 20px 0">
+        友善時光折扣查詢工具 | 全家小七即時優惠時段 © 2025
+      </span>
+    </footer>
   </body>
 </html>
