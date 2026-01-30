@@ -10,6 +10,10 @@
 </p>
 
 <p align="center">
+  <a href="https://isnowfriend.com/">https://isnowfriend.com</a>
+</p>
+
+<p align="center">
   <img src="https://img.shields.io/badge/React-18-61DAFB?logo=react&logoColor=white" alt="React 18" />
   <img src="https://img.shields.io/badge/JavaScript-ES6+-F7DF1E?logo=javascript&logoColor=black" alt="JavaScript" />
   <img src="https://img.shields.io/badge/Firebase-驗證 & 資料庫-FFCA28?logo=firebase&logoColor=black" alt="Firebase" />
