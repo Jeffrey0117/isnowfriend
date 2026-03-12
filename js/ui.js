@@ -218,7 +218,7 @@ const UIManager = {
     const storesHTML = stores.map(store => {
       // 取得店家 logo (根據店家類型)
       const storeLogo = store.type === '7-11'
-        ? 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/40/7-eleven_logo.svg/32px-7-eleven_logo.svg.png'
+        ? 'https://duk.tw/RKUhMo'
         : 'https://play-lh.googleusercontent.com/e3AKbefh3znufeBBSF1anaUZwV7oSkTjNCn67ZdSD18DwE95y7lZY9uHDloXH8fcmg';
 
       // 使用 API 已經格式化好的距離文字，如果沒有則重新格式化
