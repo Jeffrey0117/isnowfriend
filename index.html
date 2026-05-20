@@ -1117,72 +1117,88 @@
       }
 
       /* Blog 推薦卡片區 */
+      @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700&display=swap');
       .blog-section {
         max-width: 800px;
         margin: 40px auto 0;
         padding: 0 16px;
+        font-family: "Noto Sans TC", "Inter", "Segoe UI", sans-serif;
       }
       .blog-section-title {
-        font-size: 1.4rem;
+        font-size: 1.3rem;
         font-weight: 700;
         color: #1a1a2e;
-        margin-bottom: 16px;
+        margin-bottom: 20px;
         text-align: center;
+        letter-spacing: -0.01em;
       }
       .blog-cards {
         display: grid;
         grid-template-columns: 1fr;
-        gap: 16px;
+        gap: 14px;
       }
       .blog-card {
         background: #fff;
-        border-radius: 14px;
-        padding: 22px 24px;
-        box-shadow: 0 2px 12px rgba(0,0,0,0.07);
-        transition: transform 0.2s, box-shadow 0.2s;
+        border-radius: 16px;
+        padding: 22px 24px 18px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+        border: 1px solid #f0f0f0;
+        transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
         text-decoration: none;
         color: inherit;
         display: block;
       }
       .blog-card:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 6px 20px rgba(0,0,0,0.13);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+        border-color: #e0e0e0;
         text-decoration: none;
       }
+      .blog-card-tag {
+        display: inline-block;
+        padding: 2px 10px;
+        border-radius: 20px;
+        font-size: 0.72rem;
+        font-weight: 600;
+        margin-bottom: 10px;
+        background: #e8f4fd;
+        color: #0369a1;
+      }
       .blog-card-title {
-        font-size: 1.15rem;
+        font-size: 1.05rem;
         font-weight: 600;
         color: #1a1a2e;
         margin-bottom: 8px;
-        line-height: 1.4;
+        line-height: 1.45;
       }
       .blog-card-excerpt {
-        font-size: 0.93rem;
-        color: #666;
-        line-height: 1.55;
+        font-size: 0.88rem;
+        color: #5a5a5a;
+        line-height: 1.6;
         margin-bottom: 10px;
       }
       .blog-card-meta {
-        font-size: 0.82rem;
+        font-size: 0.78rem;
         color: #aaa;
       }
       .blog-section-more {
         text-align: center;
-        margin-top: 18px;
+        margin-top: 22px;
       }
       .blog-section-more a {
         display: inline-block;
         padding: 10px 28px;
-        background: #007bff;
+        background: #1a1a2e;
         color: #fff;
         border-radius: 8px;
         font-weight: 600;
-        font-size: 0.95rem;
+        font-size: 0.9rem;
         text-decoration: none;
-        transition: background 0.2s;
+        transition: background 0.2s, transform 0.15s;
       }
       .blog-section-more a:hover {
-        background: #0056b3;
+        background: #2d2d50;
+        transform: translateY(-1px);
       }
       @media (min-width: 601px) {
         .blog-cards {
@@ -1191,10 +1207,13 @@
       }
       @media (max-width: 600px) {
         .blog-section-title {
-          font-size: 1.2rem;
+          font-size: 1.15rem;
         }
         .blog-card {
-          padding: 18px 18px;
+          padding: 18px 16px 14px;
+        }
+        .blog-card-title {
+          font-size: 0.98rem;
         }
       }
     </style>
@@ -1259,19 +1278,22 @@
       <h2 class="blog-section-title">超商攻略文章</h2>
       <div class="blog-cards">
         <a href="/blog/friendly-time-complete-guide.html" class="blog-card">
+          <div class="blog-card-tag">攻略指南</div>
           <div class="blog-card-title">友善食光完整攻略：折扣時間表與省錢秘訣</div>
-          <div class="blog-card-excerpt">全家 7 折、7-11 65 折的折扣時段、適用商品與實戰省錢技巧，讓你每次都買到最划算的鮮食。</div>
-          <div class="blog-card-meta">友善食光 · 2025-06-01</div>
+          <div class="blog-card-excerpt">全家 7 折、7-11 65 折的折扣時段、適用商品與實戰省錢技巧。</div>
+          <div class="blog-card-meta">2025-06-01</div>
+        </a>
+        <a href="/blog/ptt-cvs-best-products.html" class="blog-card">
+          <div class="blog-card-tag" style="background:#fef3c7;color:#92400e;">PTT 精選</div>
+          <div class="blog-card-title">PTT 超商好物推薦：鄉民高分精選</div>
+          <div class="blog-card-excerpt">精選 PTT 鄉民真實評價最高的超商商品，附評分與心得摘要。</div>
+          <div class="blog-card-meta">2025-06-12</div>
         </a>
         <a href="/blog/convenience-store-bento-comparison.html" class="blog-card">
-          <div class="blog-card-title">超商便當大評比：7-11 vs 全家 CP 值分析</div>
-          <div class="blog-card-excerpt">從價格、份量、口味、配菜豐富度等面向，客觀比較兩大超商便當的表現。</div>
-          <div class="blog-card-meta">超商評比 · 2025-06-08</div>
-        </a>
-        <a href="/blog/reduce-food-waste-guide.html" class="blog-card">
-          <div class="blog-card-title">超商惜食運動：省錢同時為環境盡一份力</div>
-          <div class="blog-card-excerpt">友善食光如何減少食物浪費？消費者參與惜食的方式與超商永續發展的未來展望。</div>
-          <div class="blog-card-meta">永續生活 · 2025-06-10</div>
+          <div class="blog-card-tag" style="background:#fce7f3;color:#9d174d;">超商評比</div>
+          <div class="blog-card-title">超商便當大評比：7-11 vs 全家 CP 值</div>
+          <div class="blog-card-excerpt">價格、份量、口味、配菜豐富度，兩大超商便當客觀比較。</div>
+          <div class="blog-card-meta">2025-06-08</div>
         </a>
       </div>
       <div class="blog-section-more">
