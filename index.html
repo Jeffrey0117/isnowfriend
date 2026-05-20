@@ -1115,6 +1115,88 @@
           max-width: none; /* 取消最大寬度限制，讓內容決定 */
         }
       }
+
+      /* Blog 推薦卡片區 */
+      .blog-section {
+        max-width: 800px;
+        margin: 40px auto 0;
+        padding: 0 16px;
+      }
+      .blog-section-title {
+        font-size: 1.4rem;
+        font-weight: 700;
+        color: #1a1a2e;
+        margin-bottom: 16px;
+        text-align: center;
+      }
+      .blog-cards {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 16px;
+      }
+      .blog-card {
+        background: #fff;
+        border-radius: 14px;
+        padding: 22px 24px;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+        transition: transform 0.2s, box-shadow 0.2s;
+        text-decoration: none;
+        color: inherit;
+        display: block;
+      }
+      .blog-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 6px 20px rgba(0,0,0,0.13);
+        text-decoration: none;
+      }
+      .blog-card-title {
+        font-size: 1.15rem;
+        font-weight: 600;
+        color: #1a1a2e;
+        margin-bottom: 8px;
+        line-height: 1.4;
+      }
+      .blog-card-excerpt {
+        font-size: 0.93rem;
+        color: #666;
+        line-height: 1.55;
+        margin-bottom: 10px;
+      }
+      .blog-card-meta {
+        font-size: 0.82rem;
+        color: #aaa;
+      }
+      .blog-section-more {
+        text-align: center;
+        margin-top: 18px;
+      }
+      .blog-section-more a {
+        display: inline-block;
+        padding: 10px 28px;
+        background: #007bff;
+        color: #fff;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 0.95rem;
+        text-decoration: none;
+        transition: background 0.2s;
+      }
+      .blog-section-more a:hover {
+        background: #0056b3;
+      }
+      @media (min-width: 601px) {
+        .blog-cards {
+          grid-template-columns: repeat(3, 1fr);
+        }
+      }
+      @media (max-width: 600px) {
+        .blog-section-title {
+          font-size: 1.2rem;
+        }
+        .blog-card {
+          padding: 18px 18px;
+        }
+      }
     </style>
   </head>
   <body>
@@ -1171,6 +1253,31 @@
       <!-- React App -->
       <div id="root"></div>
     </div>
+
+    <!-- Blog 推薦文章 -->
+    <section class="blog-section">
+      <h2 class="blog-section-title">超商攻略文章</h2>
+      <div class="blog-cards">
+        <a href="/blog/friendly-time-complete-guide.html" class="blog-card">
+          <div class="blog-card-title">友善食光完整攻略：折扣時間表與省錢秘訣</div>
+          <div class="blog-card-excerpt">全家 7 折、7-11 65 折的折扣時段、適用商品與實戰省錢技巧，讓你每次都買到最划算的鮮食。</div>
+          <div class="blog-card-meta">友善食光 · 2025-06-01</div>
+        </a>
+        <a href="/blog/convenience-store-bento-comparison.html" class="blog-card">
+          <div class="blog-card-title">超商便當大評比：7-11 vs 全家 CP 值分析</div>
+          <div class="blog-card-excerpt">從價格、份量、口味、配菜豐富度等面向，客觀比較兩大超商便當的表現。</div>
+          <div class="blog-card-meta">超商評比 · 2025-06-08</div>
+        </a>
+        <a href="/blog/reduce-food-waste-guide.html" class="blog-card">
+          <div class="blog-card-title">超商惜食運動：省錢同時為環境盡一份力</div>
+          <div class="blog-card-excerpt">友善食光如何減少食物浪費？消費者參與惜食的方式與超商永續發展的未來展望。</div>
+          <div class="blog-card-meta">永續生活 · 2025-06-10</div>
+        </a>
+      </div>
+      <div class="blog-section-more">
+        <a href="/blog/">查看更多文章</a>
+      </div>
+    </section>
 
     <!-- 返回初始狀態按鈕 -->
     <button id="back-to-initial" class="hidden">← 返回</button>
