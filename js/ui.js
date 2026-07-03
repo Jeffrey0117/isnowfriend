@@ -182,15 +182,21 @@ const UIManager = {
     if (!container) return;
 
     if (stores.length === 0) {
-      // 顯示品牌特定的無門市提示
-      const brandText = this.state.selectedBrand || '附近';
+      // 7-11 官方已更換資料介面，庫存查詢暫時無法使用，顯示對應說明
+      const is711 = this.state.selectedBrand === '7-11';
+      const title = is711
+        ? '7-11 庫存查詢暫停服務中'
+        : (this.state.selectedBrand ? `附近的 ${this.state.selectedBrand} 門市目前皆無庫存` : '附近的門市目前皆無庫存');
+      const subtitle = is711
+        ? '7-11 官方調整了資料介面，庫存資訊暫時無法取得。您可以切換至全家查詢即期品庫存。'
+        : '請稍後再試';
       container.innerHTML = `
         <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px 25px; border-radius: 12px; text-align: center; box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);">
           <div style="font-size: 1.2em; font-weight: 600;">
-            ${this.state.selectedBrand ? `附近的 ${this.state.selectedBrand} 門市目前皆無庫存` : '附近的門市目前皆無庫存'}
+            ${title}
           </div>
           <div style="font-size: 0.95em; opacity: 0.9; margin-top: 8px;">
-            請稍後再試
+            ${subtitle}
           </div>
         </div>
       `;

@@ -290,8 +290,40 @@ const API = {
     }
   },
 
-  // 全家搜尋附近店家（使用經緯度，从静态 JSON 过滤）
-  async searchFamilyMartByLocation(lat, lng, radiusKm = 1) {
+  // 全家搜尋附近店家（MapProductInfo 一次回傳附近門市＋即時庫存）
+  async searchFamilyMartByLocation(lat, lng, radiusKm = 3) {
+    try {
+      const url = this.familyMart.baseUrl + this.familyMart.endpoints.mapProductInfo;
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ProjectCode: '202106302',
+          OldPKeys: [],
+          PostInfo: '',
+          Latitude: lat,
+          Longitude: lng
+        })
+      });
+
+      const data = await response.json();
+      if (data && data.code === 1 && Array.isArray(data.data)) {
+        // API 的 distance 為公尺，過濾半徑內門市
+        return data.data.filter(store =>
+          typeof store.distance !== 'number' || store.distance <= radiusKm * 1000
+        );
+      }
+      throw new Error(`全家 API 回應異常: ${data && data.message}`);
+    } catch (error) {
+      console.error('全家位置搜尋錯誤，改用靜態門市資料:', error);
+      return this.searchFamilyMartByLocationFallback(lat, lng, 1);
+    }
+  },
+
+  // 全家搜尋附近店家後備方案（静态 JSON 过滤，無庫存資訊）
+  async searchFamilyMartByLocationFallback(lat, lng, radiusKm = 1) {
     try {
       const allStores = await this.getFamilyMartStores();
 
@@ -307,30 +339,6 @@ const API = {
     } catch (error) {
       console.error('全家位置搜尋錯誤:', error);
       return [];
-    }
-  },
-
-  // 全家取得店家商品資訊
-  async getFamilyMartStoreProducts(storeId, lat, lng) {
-    try {
-      const url = this.familyMart.baseUrl + this.familyMart.endpoints.mapProductInfo;
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          store_id: storeId,
-          lat: lat,
-          lon: lng
-        })
-      });
-
-      const data = await response.json();
-      return data || null;
-    } catch (error) {
-      console.error('全家商品查詢錯誤:', error);
-      return null;
     }
   },
 
@@ -392,6 +400,46 @@ const API = {
     });
 
     const unifiedFM = storesFM.map(store => {
+      // 新格式：MapProductInfo 回傳（含 info 庫存陣列與 distance）
+      if (Array.isArray(store.info)) {
+        const distance = typeof store.distance === 'number'
+          ? Math.round(store.distance)
+          : this.calculateDistance(lat, lng, parseFloat(store.latitude), parseFloat(store.longitude));
+
+        let distanceText = '';
+        if (distance < 1000) {
+          distanceText = `${Math.round(distance)} 公尺`;
+        } else {
+          distanceText = `${(distance / 1000).toFixed(1)} 公里`;
+        }
+
+        const categories = store.info.map(cat => ({
+          categoryId: cat.code,
+          categoryName: cat.name,
+          qty: cat.qty || 0,
+          imageUrl: cat.iconURL || ''
+        }));
+
+        return {
+          id: store.oldPKey,
+          name: store.name,
+          type: '全家',
+          address: store.address || '',
+          location: {
+            lat: parseFloat(store.latitude),
+            lng: parseFloat(store.longitude)
+          },
+          distance: distance,
+          distanceText: distanceText,
+          storeId: store.oldPKey,
+          phone: store.tel || '',
+          totalRemainingQty: store.info.reduce((sum, cat) => sum + (cat.qty || 0), 0),
+          categories: categories,
+          raw: store
+        };
+      }
+
+      // 舊格式：靜態 JSON 後備資料（無庫存資訊）
       const distance = this.calculateDistance(lat, lng, parseFloat(store.py_wgs84 || store.lat || store.py), parseFloat(store.px_wgs84 || store.lon || store.px));
 
       // 格式化距離文本
@@ -610,36 +658,29 @@ const API = {
         categories: categories
       };
     } else if (store.type === '全家') {
-      const products = await this.getFamilyMartStoreProducts(
-        store.storeId,
-        store.location.lat,
-        store.location.lng
-      );
-      if (!products) return null;
+      // MapProductInfo 搜尋時已一併回傳庫存，直接使用 raw.info
+      const info = store.raw && Array.isArray(store.raw.info) ? store.raw.info : null;
+      if (!info) return null;
 
-      const categories = [];
-      if (Array.isArray(products)) {
-        products.forEach(cat => {
-          const items = [];
-          if (cat.products && Array.isArray(cat.products)) {
-            cat.products.forEach(p => {
-              items.push({
-                name: p.name,
-                qty: p.qty || 0,
-                price: 0
-              });
-            });
-          }
-          if (items.length > 0) {
-            categories.push({
-              name: cat.category_name || cat.name,
-              imageUrl: cat.image_url || cat.url || '',
-              totalQty: items.reduce((sum, item) => sum + item.qty, 0),
-              items: items
-            });
-          }
+      const categories = info
+        .filter(cat => (cat.qty || 0) > 0)
+        .map(cat => {
+          // 攤平子分類下的商品清單（含品名與數量）
+          const items = (cat.categories || []).flatMap(sub =>
+            (sub.products || []).map(p => ({
+              name: p.name,
+              qty: p.qty || 0,
+              price: 0
+            }))
+          );
+
+          return {
+            name: cat.name,
+            imageUrl: cat.iconURL || '',
+            totalQty: cat.qty || 0,
+            items: items.length > 0 ? items : [{ name: cat.name, qty: cat.qty || 0, price: 0 }]
+          };
         });
-      }
 
       return {
         store: store,
